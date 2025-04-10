@@ -56,7 +56,7 @@ class TroChoiTruyTimKhoBau:
 
         # Nội dung hướng dẫn
         noi_dung = [
-            "🧭 CHÀO MỪNG ĐẾN VỚI CHUYẾN PHIÊU LƯU!",
+            "🧭 CHÀO MỪNG ĐẾN VỚI CHUYẾN PHIÊU LƯU TRUY TÌM KHO BÁU!",
             "⚓ Mục tiêu: Tìm ra kho báu bị ẩn dưới đáy biển.",
             "🦈 Tránh cá mập và các sinh vật nguy hiểm.",
             "🗺️ Thu thập vật phẩm và bản đồ rải rác khắp nơi.",
