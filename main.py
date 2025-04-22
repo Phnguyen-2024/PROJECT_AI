@@ -46,12 +46,13 @@ def get_neighbors(pos):
 def heuristic(a, b):
     return abs(a[0]-b[0]) + abs(a[1]-b[1])
 
-# Pathfinding algorithms
+# UCS
 
 def ucs(start, goal, tilemap):
     pq = [(0, start)]
     cost = {start: 0}
     parent = {start: None}
+
     while pq:
         curr_cost, curr = heapq.heappop(pq)
         if curr == goal:
@@ -65,10 +66,13 @@ def ucs(start, goal, tilemap):
                 parent[neighbor] = curr
     return reconstruct_path(parent, start, goal)
 
+# Greedy
+
 def greedy(start, goal, tilemap):
     pq = [(heuristic(start, goal), start)]
     visited = set()
     parent = {start: None}
+
     while pq:
         _, curr = heapq.heappop(pq)
         if curr == goal:
@@ -81,10 +85,13 @@ def greedy(start, goal, tilemap):
                 visited.add(neighbor)
     return reconstruct_path(parent, start, goal)
 
+# A*
+
 def astar(start, goal, tilemap):
     pq = [(0 + heuristic(start, goal), 0, start)]
     cost = {start: 0}
     parent = {start: None}
+
     while pq:
         _, g, curr = heapq.heappop(pq)
         if curr == goal:
@@ -130,9 +137,6 @@ control_mode = "auto"
 step_count = 0
 pathfinding_time = 0
 completed = False
-manual_step_limit = 60
-manual_timer_limit = 30
-manual_start_time = None
 
 # Draw map
 def draw_tilemap():
@@ -140,15 +144,23 @@ def draw_tilemap():
         for col in range(COLS):
             tile = tilemap[row][col]
             x, y = col*TILE_SIZE, row*TILE_SIZE
-            screen.blit({'G': grass_img, 'D': dirt_img, 'T': trees_img, 'W': water_img}[tile], (x, y))
+            screen.blit({
+                'G': grass_img,
+                'D': dirt_img,
+                'T': trees_img,
+                'W': water_img
+            }[tile], (x, y))
             pygame.draw.rect(screen, (0, 0, 0), (x, y, TILE_SIZE, TILE_SIZE), 1)
+
     if control_mode == "auto":
         for (r, c) in current_path:
             pygame.draw.rect(screen, (255, 255, 0), (c*TILE_SIZE, r*TILE_SIZE, TILE_SIZE, TILE_SIZE), 2)
+
     pygame.draw.rect(screen, (0, 255, 0), (start[1]*TILE_SIZE, start[0]*TILE_SIZE, TILE_SIZE, TILE_SIZE), 3)
     pygame.draw.rect(screen, (255, 0, 0), (goal[1]*TILE_SIZE, goal[0]*TILE_SIZE, TILE_SIZE, TILE_SIZE), 3)
     px, py = player_pos
     pygame.draw.circle(screen, (0, 0, 255), (py*TILE_SIZE + TILE_SIZE//2, px*TILE_SIZE + TILE_SIZE//2), TILE_SIZE//3)
+
     screen.blit(font.render(f"{algorithm} | Mode: {control_mode.upper()} (M to toggle)", True, (255, 255, 255)), (10, 10))
     screen.blit(font.render(f"Steps: {step_count}  Time: {pathfinding_time:.2f}s", True, (255, 255, 255)), (10, 35))
     if completed:
@@ -162,26 +174,18 @@ while running:
     draw_tilemap()
     pygame.display.flip()
 
-    if control_mode == "manual" and manual_start_time is not None:
-        if step_count >= manual_step_limit or time.time() - manual_start_time > manual_timer_limit:
-            completed = True
     if control_mode == "auto" and agent_index < len(current_path):
         player_pos = current_path[agent_index]
         agent_index += 1
         step_count += 1
         pygame.time.wait(80)
+
     if player_pos == goal and not completed:
         completed = True
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mx, my = pygame.mouse.get_pos()
-            gx, gy = my // TILE_SIZE, mx // TILE_SIZE
-            if tilemap[gx][gy] != 'W':
-                goal = (gx, gy)
-                completed = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_1:
                 t0 = time.time()
@@ -225,7 +229,6 @@ while running:
                 step_count = 0
                 agent_index = 0
                 completed = False
-                manual_start_time = time.time() if control_mode == "manual" else None
             elif control_mode == "manual":
                 dx, dy = 0, 0
                 if event.key == pygame.K_UP:
