@@ -117,11 +117,11 @@ class Game:
         self.cols = cols
 
         # Load images
-        self.grass_img = load_image("D:\\Nam2_HKII\\AI\\PROJECT\\PROJECT_AI\\assets\\map\\grass.png", tile_size)
-        self.dirt_img = load_image("D:\\Nam2_HKII\\AI\\PROJECT\\PROJECT_AI\\assets\\map\\dirt.png", tile_size)
-        self.trees_img = load_image("D:\\Nam2_HKII\\AI\\PROJECT\\PROJECT_AI\\assets\\map\\tree.png", tile_size)
-        self.water_img = load_image("D:\\Nam2_HKII\\AI\\PROJECT\\PROJECT_AI\\assets\\map\\water_16px.png", tile_size)
-        self.treasure_img = load_image("D:\\Nam2_HKII\\AI\\PROJECT\\PROJECT_AI\\assets\\map\\treasure.png", tile_size)
+        self.grass_img = load_image("D:\\Nam2 - Ki2\\Artificial Intelligence\\PROJECT_AI\\src\\grass.png", tile_size)
+        self.dirt_img = load_image("D:\\Nam2 - Ki2\\Artificial Intelligence\\PROJECT_AI\\src\\dirt.png", tile_size)
+        self.trees_img = load_image("D:\\Nam2 - Ki2\\Artificial Intelligence\\PROJECT_AI\\src\\tree.png", tile_size)
+        self.water_img = load_image("D:\\Nam2 - Ki2\\Artificial Intelligence\\PROJECT_AI\\src\\water_16px.png", tile_size)
+        self.treasure_img = load_image("D:\\Nam2 - Ki2\\Artificial Intelligence\\PROJECT_AI\\src\\treasure.png", tile_size)
 
         # Generate map and set start/goal positions
         self.tilemap = generate_random_map(self.rows, self.cols)
@@ -130,7 +130,7 @@ class Game:
         self.tilemap[self.goal_pos[0]][self.goal_pos[1]] = "X"
 
         # Initialize player
-        blocky_sprite = pygame.image.load("D:\\Nam2_HKII\\AI\\PROJECT\\PROJECT_AI\\assets\\map\\blocky.png")
+        blocky_sprite = pygame.image.load("D:\\Nam2 - Ki2\\Artificial Intelligence\\PROJECT_AI\\src\\blocky.png")
         self.player = Player(screen, blocky_sprite, start_pos=self.start_pos, tile_size=tile_size)
 
         # Game state

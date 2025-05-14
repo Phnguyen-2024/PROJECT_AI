@@ -242,26 +242,29 @@ class Game:
         self.cols = cols
 
         # Load GIF frames
-        self.gif_path = r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\src\hinhnen.gif"
+        self.gif_path = r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\src\hinhnen.gif"
         self.gif_frames = load_gif_frames(self.gif_path)
         self.frame_count = len(self.gif_frames)
         self.current_frame = 0
         self.frame_timer = 0
+        # D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\src\
 
         # Load images
-        self.grass_img = load_image(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\map\grass.png", tile_size)
-        self.dirt_img = load_image(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\map\dirt.png", tile_size)
-        self.trees_img = load_image(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\map\tree.png", tile_size)
-        self.water_img = load_image(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\map\water_16px.png", tile_size)
-        self.treasure_img = load_image(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\map\treasure.png", tile_size)
+        self.grass_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\grass.png", tile_size)
+        self.dirt_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\dirt.png", tile_size)
+        self.trees_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\tree.png", tile_size)
+        self.water_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\water_16px.png", tile_size)
+        self.treasure_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\treasure.png", tile_size)
+        # D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\
 
         # Load icons cho nút
-        self.replay_icon = load_icon(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\replay_icon.png", 24)
-        self.pause_icon = load_icon(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\pause_icon.png", 24)
+        self.replay_icon = load_icon(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\replay_icon.png", 24)
+        self.pause_icon = load_icon(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\pause_icon.png", 24)
+        # D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets
 
         # Load âm thanh chiến thắng
         try:
-            self.win_sound = pygame.mixer.Sound(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\win.mp3")
+            self.win_sound = pygame.mixer.Sound(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\win.mp3")
         except pygame.error as e:
             print(f"Không thể load âm thanh chiến thắng: {e}")
             self.win_sound = None
@@ -272,7 +275,7 @@ class Game:
         self.tilemap = generate_random_map(rows, cols)
 
         # Initialize player
-        blocky_sprite = pygame.image.load(r"D:\Nam2_HKII\AI\PROJECT\PROJECT_AI\assets\map\blocky.png")
+        blocky_sprite = pygame.image.load(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\blocky.png")
         self.player = Player(screen, blocky_sprite, start_pos=self.start_pos, tile_size=tile_size)
 
         # Game state
@@ -298,7 +301,7 @@ class Game:
 
         # Tile costs for A*, Backtracking, and Q-Learning
         self.tile_cost = {
-            "G": 1, "D": 2, "T": float("inf"), "W": 5, "X": 1
+            "G": 1, "D": 2, "T": float("inf"), "W": 3, "X": 1
         }
 
         # Path overlay for visualization
