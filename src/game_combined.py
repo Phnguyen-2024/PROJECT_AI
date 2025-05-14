@@ -1,62 +1,56 @@
 import pygame
 import math
 import random
+import time
 from thuattoan import *
 from player import Player
 from map_generator import generate_random_map
 from utils import load_image, load_icon
-from ui import load_gif_frames
-import time
+from ui import load_gif_frames, show_start_screen  # Import hàm show_start_screen
 PANEL_TOP_HEIGHT = 100
 
-# Class Game
 class Game:
     def __init__(self, screen, tile_size, rows, cols):
         self.screen = screen
         self.tile_size = tile_size
         self.rows = rows
         self.cols = cols
-
+    
         # Load GIF frames
-        self.gif_path = r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\src\hinhnen.gif"
+        self.gif_path = r"D:\PROJECT_AI\src\hinhnen.gif"
         self.gif_frames = load_gif_frames(self.gif_path, screen)
         self.frame_count = len(self.gif_frames)
         self.current_frame = 0
         self.frame_timer = 0
-        # D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\src\
 
         # Load images
-        self.grass_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\grass.png", tile_size)
-        self.dirt_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\dirt.png", tile_size)
-        self.trees_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\tree.png", tile_size)
-        self.water_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\water_16px.png", tile_size)
-        self.treasure_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\treasure.png", tile_size)
-        # D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\
+        self.grass_img = load_image(r"D:\PROJECT_AI\assets\map\grass.png", tile_size)
+        self.dirt_img = load_image(r"D:\PROJECT_AI\assets\map\dirt.png", tile_size)
+        self.trees_img = load_image(r"D:\PROJECT_AI\assets\map\tree.png", tile_size)
+        self.water_img = load_image(r"D:\PROJECT_AI\assets\map\water_16px.png", tile_size)
+        self.treasure_img = load_image(r"D:\PROJECT_AI\assets\map\treasure.png", tile_size)
 
-        # Load icons cho nút
-        self.replay_icon = load_icon(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\replay_icon.png", 24)
-        self.pause_icon = load_icon(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\pause_icon.png", 24)
-        # D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets
+        # Load icons for buttons
+        self.replay_icon = load_icon(r"D:\PROJECT_AI\assets\replay_icon.png", 24)
+        self.pause_icon = load_icon(r"D:\PROJECT_AI\assets\pause_icon.png", 24)
 
-        # Load âm thanh chiến thắng
+        # Load win and lose sounds
         try:
-            self.win_sound = pygame.mixer.Sound(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\win.mp3")
+            self.win_sound = pygame.mixer.Sound(r"D:\PROJECT_AI\assets\win.mp3")
+            self.lose_sound = pygame.mixer.Sound(r"D:\PROJECT_AI\assets\losing.mp3")
         except pygame.error as e:
-            print(f"Không thể load âm thanh chiến thắng: {e}")
+            print(f"Cannot load sound: {e}")
             self.win_sound = None
+            self.lose_sound = None
 
-        # Khởi tạo bản đồ và vị trí
-        # self.start_pos = (0, 0)
-        # self.goal_pos = (rows - 1, cols - 1)
-        # self.tilemap = generate_random_map(rows, cols)
-
+        # Initialize map and positions
         self.tilemap = generate_random_map(self.rows, self.cols)
         self.start_pos = (0, 0)
         self.goal_pos = (self.rows - 1, self.cols - 1)
         self.tilemap[self.goal_pos[0]][self.goal_pos[1]] = "X"
 
         # Initialize player
-        blocky_sprite = pygame.image.load(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\blocky.png")
+        blocky_sprite = pygame.image.load(r"D:\PROJECT_AI\assets\map\blocky.png")
         self.player = Player(screen, blocky_sprite, start_pos=self.start_pos, tile_size=tile_size)
 
         # Game state
@@ -68,7 +62,7 @@ class Game:
         self.new_level_ready = False
 
         # Timer state
-        self.time_limit = 60  # Level 1: 60 seconds
+        self.time_limit = 60
         self.time_left = self.time_limit
         self.last_time_update = pygame.time.get_ticks()
 
@@ -86,10 +80,9 @@ class Game:
             "G": 1, "D": 2, "T": float("inf"), "W": 3, "X": 1
         }
 
-        # Path overlay for visualization
+        # Path and exploration overlays
         self.path_overlay = pygame.Surface((tile_size, tile_size), pygame.SRCALPHA)
-        self.path_overlay.fill((255, 255, 0, 200))  # Vàng sáng, ít trong suốt
-        # Exploration overlay for Backtracking
+        self.path_overlay.fill((255, 255, 0, 200))
         self.exploration_overlay = pygame.Surface((tile_size, tile_size), pygame.SRCALPHA)
         self.exploration_overlay.fill((0, 255, 0, 64))
         self.explored_tiles = set()
@@ -98,6 +91,20 @@ class Game:
         self.last_explore_time = 0
         self.explore_delay = 50
         self.is_exploring = False
+
+        # Statistics for algorithms
+        self.stats = {
+            "astar": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "bfs": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "beam_search": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "AndOr": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "backtracking": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "q_learning": {"time": 0, "cost": 0, "nodes": 0, "steps": 0}
+        }
+        self.show_stats = False
+
+        # Compute initial statistics for the starting map
+        self.compute_all_stats()
 
     def draw_tilemap(self):
         for row in range(len(self.tilemap)):
@@ -117,28 +124,129 @@ class Game:
                 elif tile == "X":
                     self.screen.blit(self.treasure_img, (x, y))
 
-                # Draw exploration overlay for Backtracking
                 if self.current_algorithm == "backtracking" and (row, col) in self.explored_tiles:
                     self.screen.blit(self.exploration_overlay, (x, y))
 
-                # Draw path overlay chỉ khi show_path và có path
                 if self.show_path and self.path and (row, col) in self.path and (row, col) != self.goal_pos:
                     self.screen.blit(self.path_overlay, (x, y))
 
                 pygame.draw.rect(self.screen, (0, 0, 0), (x, y, self.tile_size, self.tile_size), 1)
 
     def draw_ui(self):
-        # Hiển thị thuật toán
         algo_text = self.font.render(f"Algorithm: {self.current_algorithm.upper()}", True, (255, 255, 255))
         self.screen.blit(algo_text, (self.screen.get_width() - algo_text.get_width() - 10, 10))
-        # Hiển thị thời gian
-        time_text = self.font.render(f"Thời gian: {int(self.time_left)}", True, (255, 255, 255))
+        time_text = self.font.render(f"Time: {int(self.time_left)}", True, (255, 255, 255))
         self.screen.blit(time_text, (self.screen.get_width() - time_text.get_width() - 10, 45))
 
-        # Hiển thị thông báo bắt đầu level
         if self.new_level_ready:
-            start_text = self.font.render("Nhấn Enter để bắt đầu!", True, (255, 255, 0))
+            start_text = self.font.render("Press Enter to start!", True, (255, 255, 0))
             self.screen.blit(start_text, (self.screen.get_width() // 2 - start_text.get_width() // 2, self.screen.get_height() // 2))
+
+    def draw_stats_table(self):
+        # Tạo một surface cho bảng thống kê với nền trắng
+        table_width = 700
+        table_height = 400
+        table_x = (self.screen.get_width() - table_width) // 2
+        table_y = (self.screen.get_height() - table_height) // 2
+        table_surface = pygame.Surface((table_width, table_height))
+        table_surface.fill((255, 255, 255))  # Nền trắng
+
+        # Tạo viền cho bảng
+        pygame.draw.rect(table_surface, (0, 0, 0), (0, 0, table_width, table_height), 2)
+
+        algo_col_width = 180  # Tăng chiều rộng cột Algorithm
+        other_col_width = 110  # Chiều rộng cho các cột khác
+        row_height = 40
+        header_font = pygame.font.SysFont("Times New Roman", 24, bold=True)
+        cell_font = pygame.font.SysFont("Times New Roman", 20)
+        title_font = pygame.font.SysFont("Times New Roman", 30, bold=True)
+
+        # Vẽ tiêu đề
+        title_text = title_font.render("So sánh thuật toán", True, (0, 0, 255))  # Tiêu đề màu xanh dương
+        title_rect = title_text.get_rect(center=(table_width // 2, 30))
+        table_surface.blit(title_text, title_rect)
+
+        headers = ["Algorithm", "Time (s)", "Cost", "Nodes", "Steps"]
+        algorithms = ["astar", "bfs", "beam_search", "AndOr", "backtracking", "q_learning"]
+
+        # Tính toán vị trí cho từng cột
+        col_positions = [20]  # Lùi vào 20px từ lề trái
+        col_positions.append(col_positions[-1] + algo_col_width)  # Time (s)
+        col_positions.append(col_positions[-1] + other_col_width)  # Cost
+        col_positions.append(col_positions[-1] + other_col_width)  # Nodes
+        col_positions.append(col_positions[-1] + other_col_width)  # Steps
+
+        # Vẽ hàng tiêu đề
+        header_y = 70
+        for i, header in enumerate(headers):
+            pygame.draw.rect(table_surface, (200, 200, 200), (col_positions[i], header_y, 
+                            algo_col_width if i == 0 else other_col_width, row_height))  # Nền xám nhạt cho tiêu đề
+            pygame.draw.rect(table_surface, (0, 0, 0), (col_positions[i], header_y, 
+                            algo_col_width if i == 0 else other_col_width, row_height), 1)  # Viền đen
+            text = header_font.render(header, True, (0, 0, 0))  # Chữ đen
+            text_rect = text.get_rect(center=(col_positions[i] + (algo_col_width if i == 0 else other_col_width) // 2, header_y + row_height // 2))
+            table_surface.blit(text, text_rect)
+
+        # Vẽ các hàng dữ liệu
+        for row, algo in enumerate(algorithms):
+            row_y = header_y + (row + 1) * row_height
+            # Tô màu xen kẽ cho các hàng (trắng và xám nhạt)
+            row_color = (240, 240, 240) if row % 2 else (255, 255, 255)
+            for i in range(len(headers)):
+                pygame.draw.rect(table_surface, row_color, (col_positions[i], row_y, 
+                                algo_col_width if i == 0 else other_col_width, row_height))
+                pygame.draw.rect(table_surface, (0, 0, 0), (col_positions[i], row_y, 
+                                algo_col_width if i == 0 else other_col_width, row_height), 1)
+
+            # Cột Algorithm
+            text = cell_font.render(algo.upper(), True, (0, 0, 0))
+            text_rect = text.get_rect(center=(col_positions[0] + algo_col_width // 2, row_y + row_height // 2))
+            table_surface.blit(text, text_rect)
+
+            # Cột Time (s)
+            time_val = f"{self.stats[algo]['time']:.6f}"
+            text = cell_font.render(time_val, True, (0, 0, 0))
+            text_rect = text.get_rect(center=(col_positions[1] + other_col_width // 2, row_y + row_height // 2))
+            table_surface.blit(text, text_rect)
+
+            # Cột Cost
+            cost_val = f"{self.stats[algo]['cost']}"
+            text = cell_font.render(cost_val, True, (0, 0, 0))
+            text_rect = text.get_rect(center=(col_positions[2] + other_col_width // 2, row_y + row_height // 2))
+            table_surface.blit(text, text_rect)
+
+            # Cột Nodes
+            nodes_val = f"{self.stats[algo]['nodes']}"
+            text = cell_font.render(nodes_val, True, (0, 0, 0))
+            text_rect = text.get_rect(center=(col_positions[3] + other_col_width // 2, row_y + row_height // 2))
+            table_surface.blit(text, text_rect)
+
+            # Cột Steps
+            steps_val = f"{self.stats[algo]['steps']}"
+            text = cell_font.render(steps_val, True, (0, 0, 0))
+            text_rect = text.get_rect(center=(col_positions[4] + other_col_width // 2, row_y + row_height // 2))
+            table_surface.blit(text, text_rect)
+
+        # Vẽ nút "Close"
+        close_button_rect = pygame.Rect(table_width - 120, table_height - 50, 100, 40)
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_pos_in_table = (mouse_pos[0] - table_x, mouse_pos[1] - table_y)
+        close_color = (255, 215, 0) if close_button_rect.collidepoint(mouse_pos_in_table) else (160, 82, 45)
+        pygame.draw.rect(table_surface, close_color, close_button_rect, border_radius=8)
+        close_text = cell_font.render("Close", True, (255, 255, 255))
+        close_text_rect = close_text.get_rect(center=close_button_rect.center)
+        table_surface.blit(close_text, close_text_rect)
+
+        # Tạo một lớp phủ tối mờ cho toàn màn hình
+        overlay = pygame.Surface((self.screen.get_width(), self.screen.get_height()), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150))  # Lớp phủ tối mờ
+        self.screen.blit(overlay, (0, 0))
+
+        # Vẽ bảng lên màn hình
+        self.screen.blit(table_surface, (table_x, table_y))
+
+        # Trả về rect của nút "Close" với tọa độ toàn màn hình
+        return close_button_rect.move(table_x, table_y)
 
     def compute_path(self):
         self.path = []
@@ -149,27 +257,284 @@ class Game:
         self.is_exploring = False
         self.show_path = True
 
+        start_time = time.perf_counter()  # Sử dụng perf_counter
+        nodes_explored = 0
+        path = []
+
         if self.current_algorithm == "astar":
-            self.path = astar(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
+            path, nodes_explored = self.astar_with_stats(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
         elif self.current_algorithm == "bfs":
-            self.path = bfs(self.start_pos, self.goal_pos, self.tilemap)
+            path, nodes_explored = self.bfs_with_stats(self.start_pos, self.goal_pos, self.tilemap)
         elif self.current_algorithm == "beam_search":
-            self.path = beam_search(self.start_pos, self.goal_pos, self.tilemap)
+            path, nodes_explored = self.beam_search_with_stats(self.start_pos, self.goal_pos, self.tilemap)
         elif self.current_algorithm == "AndOr":
-            self.path = and_or_search(self.start_pos, self.goal_pos, self.tilemap)
+            path, nodes_explored = self.and_or_search_with_stats(self.start_pos, self.goal_pos, self.tilemap)
         elif self.current_algorithm == "backtracking":
             self.is_exploring = True
-            self.path = backtracking(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
-            self.exploration_list = self.path  # Use path for exploration visualization
+            path, nodes_explored = self.backtracking_with_stats(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
+            self.exploration_list = path
             self.explored_tiles = set(self.exploration_list)
         elif self.current_algorithm == "q_learning":
-            self.path = q_learning(self.start_pos, self.goal_pos, self.tilemap)
+            path, nodes_explored = self.q_learning_with_stats(self.start_pos, self.goal_pos, self.tilemap)
 
-        if self.path:
-            print(f"{self.current_algorithm} path: {self.path}")
-            print(f"Tilemap at path: {[self.tilemap[r][c] for r, c in self.path]}")
+        end_time = time.perf_counter()
+        time_taken = end_time - start_time
+        path_cost = self.calculate_path_cost(path) if path else 0
+        steps = len(path) - 1 if path else 0
+
+        self.path = path
+        if path:
+            print(f"{self.current_algorithm} path: {path}")
+            print(f"Tilemap at path: {[self.tilemap[r][c] for r, c in path]}")
+            self.stats[self.current_algorithm] = {
+                "time": time_taken,
+                "cost": path_cost,
+                "nodes": nodes_explored,
+                "steps": steps
+            }
         else:
             print(f"{self.current_algorithm} found no path")
+            self.stats[self.current_algorithm] = {"time": 0, "cost": 0, "nodes": nodes_explored, "steps": 0}
+
+    def compute_all_stats(self):
+        algorithms = ["astar", "bfs", "beam_search", "AndOr", "backtracking", "q_learning"]
+        original_algorithm = self.current_algorithm
+        original_path = self.path
+        original_explored_tiles = self.explored_tiles.copy()
+        original_exploration_list = self.exploration_list.copy()
+        original_is_exploring = self.is_exploring
+        original_show_path = self.show_path
+
+        for algo in algorithms:
+            self.current_algorithm = algo
+            self.compute_path()
+
+        self.current_algorithm = original_algorithm
+        self.path = original_path
+        self.explored_tiles = original_explored_tiles
+        self.exploration_list = original_exploration_list
+        self.is_exploring = original_is_exploring
+        self.show_path = original_show_path
+
+    def calculate_path_cost(self, path):
+        if not path:
+            return 0
+        cost = 0
+        for r, c in path:
+            tile = self.tilemap[r][c]
+            cost += self.tile_cost.get(tile, 0)
+        return cost
+
+    def astar_with_stats(self, start, goal, tilemap, tile_cost):
+        rows, cols = len(tilemap), len(tilemap[0])
+        pq = [(0 + heuristic(start, goal), 0, start)]
+        cost = {start: 0}
+        parent = {start: None}
+        nodes_explored = 0
+
+        while pq:
+            nodes_explored += 1
+            _, g, curr = heapq.heappop(pq)
+            if curr == goal:
+                break
+            for neighbor in get_neighbors(curr, rows, cols, tilemap):
+                ncost = tile_cost[tilemap[neighbor[0]][neighbor[1]]]
+                new_cost = g + ncost
+                if ncost != float("inf") and (neighbor not in cost or new_cost < cost[neighbor]):
+                    cost[neighbor] = new_cost
+                    heapq.heappush(pq, (new_cost + heuristic(neighbor, goal), new_cost, neighbor))
+                    parent[neighbor] = curr
+        path = reconstruct_path(parent, start, goal)
+        return path, nodes_explored
+
+    def bfs_with_stats(self, start, goal, tilemap):
+        rows, cols = len(tilemap), len(tilemap[0])
+        queue = deque([(start, None)])
+        visited = {start}
+        parent = {start: None}
+        nodes_explored = 0
+
+        while queue:
+            nodes_explored += 1
+            curr, _ = queue.popleft()
+            if curr == goal:
+                break
+            for neighbor in get_neighbors(curr, rows, cols, tilemap):
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    parent[neighbor] = curr
+                    queue.append((neighbor, curr))
+        path = reconstruct_path(parent, start, goal)
+        return path, nodes_explored
+
+    def beam_search_with_stats(self, start, goal, tilemap, beam_width=3):
+        rows, cols = len(tilemap), len(tilemap[0])
+        beam = [(heuristic(start, goal), start)]
+        parent = {start: None}
+        visited = set([start])
+        nodes_explored = 0
+
+        while beam:
+            candidates = []
+            for _, pos in beam:
+                for neighbor in get_neighbors(pos, rows, cols, tilemap):
+                    nodes_explored += 1
+                    if neighbor not in visited:
+                        score = heuristic(neighbor, goal)
+                        candidates.append((score, neighbor))
+                        visited.add(neighbor)
+                        parent[neighbor] = pos
+
+            if not candidates:
+                break
+
+            candidates.sort(key=lambda x: x[0])
+            beam = candidates[:beam_width]
+
+            for score, pos in beam:
+                if pos == goal:
+                    path = reconstruct_path(parent, start, goal)
+                    return path, nodes_explored
+
+        return [], nodes_explored
+
+    def and_or_search_with_stats(self, start, goal, tilemap):
+        rows, cols = len(tilemap), len(tilemap[0])
+        visited = set()
+        parent = {start: None}
+        nodes_explored = 0
+
+        def or_search(state):
+            nonlocal nodes_explored
+            nodes_explored += 1
+            if state == goal:
+                return True
+            if state in visited:
+                return False
+            visited.add(state)
+            successors = list(get_neighbors(state, rows, cols, tilemap))
+            for next_state in successors:
+                if and_search(next_state):
+                    parent[next_state] = state
+                    return True
+            visited.remove(state)
+            return False
+
+        def and_search(state):
+            nonlocal nodes_explored
+            nodes_explored += 1
+            if state == goal:
+                return True
+            if state in visited:
+                return False
+            visited.add(state)
+            successors = list(get_neighbors(state, rows, cols, tilemap))
+            for next_state in successors:
+                if or_search(next_state):
+                    parent[next_state] = state
+                    return True
+            visited.remove(state)
+            return False
+
+        if and_search(start):
+            path = reconstruct_path(parent, start, goal)
+            return path, nodes_explored
+        return [], nodes_explored
+
+    def backtracking_with_stats(self, start, goal, tilemap, tile_cost):
+        rows, cols = len(tilemap), len(tilemap[0])
+        visited = set()
+        path = []
+        nodes_explored = 0
+
+        def backtrack(curr):
+            nonlocal nodes_explored
+            nodes_explored += 1
+            if curr == goal:
+                path.append(curr)
+                return True
+            if curr in visited:
+                return False
+            visited.add(curr)
+            path.append(curr)
+            for neighbor in get_neighbors(curr, rows, cols, tilemap):
+                if backtrack(neighbor):
+                    return True
+            path.pop()
+            visited.remove(curr)
+            return False
+
+        if backtrack(start):
+            return path, nodes_explored
+        return [], nodes_explored
+
+    def q_learning_with_stats(self, start, goal, tilemap, episodes=1000, alpha=0.1, gamma=0.9, epsilon=0.1):
+        rows, cols = len(tilemap), len(tilemap[0])
+        actions = [(0,1), (1,0), (0,-1), (-1,0)]
+        q_table = {}
+        for r in range(rows):
+            for c in range(cols):
+                for a in range(len(actions)):
+                    q_table[((r,c), a)] = 0.0
+        nodes_explored = 0
+
+        def get_valid_actions(state):
+            valid = []
+            r, c = state
+            for i, (dr, dc) in enumerate(actions):
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and tilemap[nr][nc] != "T":
+                    valid.append(i)
+            return valid
+
+        def get_next_state(state, action):
+            r, c = state
+            dr, dc = actions[action]
+            return (r + dr, c + dc)
+
+        def get_reward(state):
+            if state == goal:
+                return 100
+            if tilemap[state[0]][state[1]] == "T":
+                return -100
+            return -1
+
+        for _ in range(episodes):
+            state = start
+            while state != goal:
+                nodes_explored += 1
+                valid_actions = get_valid_actions(state)
+                if not valid_actions:
+                    break
+                if random.random() < epsilon:
+                    action = random.choice(valid_actions)
+                else:
+                    action = max(valid_actions, key=lambda a: q_table[(state, a)])
+                next_state = get_next_state(state, action)
+                reward = get_reward(next_state)
+                next_valid_actions = get_valid_actions(next_state)
+                if next_valid_actions:
+                    max_next_q = max(q_table[(next_state, a)] for a in next_valid_actions)
+                else:
+                    max_next_q = 0
+                q_table[(state, action)] += alpha * (
+                    reward + gamma * max_next_q - q_table[(state, action)]
+                )
+                state = next_state
+
+        path = []
+        state = start
+        while state != goal:
+            path.append(state)
+            valid_actions = get_valid_actions(state)
+            if not valid_actions:
+                return [], nodes_explored
+            action = max(valid_actions, key=lambda a: q_table[(state, a)])
+            state = get_next_state(state, action)
+            nodes_explored += 1
+
+        path.append(goal)
+        return path, nodes_explored
 
     def update_exploration(self):
         if not self.is_exploring or self.current_algorithm != "backtracking":
@@ -222,10 +587,21 @@ class Game:
         self.time_left = self.time_limit
         self.last_time_update = pygame.time.get_ticks()
 
+    def reset_stats(self):
+        self.stats = {
+            "astar": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "bfs": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "beam_search": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "AndOr": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "backtracking": {"time": 0, "cost": 0, "nodes": 0, "steps": 0},
+            "q_learning": {"time": 0, "cost": 0, "nodes": 0, "steps": 0}
+        }
+
     def reset_for_new_level(self):
         self.start_pos = (0, 0)
         self.tilemap = generate_random_map(self.rows, self.cols)
         self.goal_pos = (self.rows - 1, self.cols - 1)
+        self.tilemap[self.goal_pos[0]][self.goal_pos[1]] = "X"
         self.player.row, self.player.col = self.start_pos
         self.steps = 0
         self.path = []
@@ -238,6 +614,8 @@ class Game:
         self.show_path = False
         self.set_time_limit()
         self.new_level_ready = True
+        self.reset_stats()
+        self.compute_all_stats()
 
     def reset_game(self):
         self.level = 1
@@ -245,6 +623,7 @@ class Game:
         self.start_pos = (0, 0)
         self.tilemap = generate_random_map(self.rows, self.cols)
         self.goal_pos = (self.rows - 1, self.cols - 1)
+        self.tilemap[self.goal_pos[0]][self.goal_pos[1]] = "X"
         self.player.row, self.player.col = self.start_pos
         self.path = []
         self.path_index = 0
@@ -257,13 +636,15 @@ class Game:
         self.set_time_limit()
         self.new_level_ready = False
         self.paused = False
+        self.reset_stats()
+        self.compute_all_stats()
 
     def run(self):
         clock = pygame.time.Clock()
         running = True
+        close_button_rect = None
 
         while running:
-            # Vẽ panel trên với nền động
             try:
                 if self.gif_frames and not self.paused:
                     self.frame_timer += 1
@@ -276,20 +657,17 @@ class Game:
             except pygame.error as e:
                 print(f"Error rendering top panel background: {e}")
 
-            # Vẽ panel dưới với bản đồ
             self.screen.fill((30, 30, 30), (0, PANEL_TOP_HEIGHT, self.screen.get_width(), self.screen.get_height() - PANEL_TOP_HEIGHT))
             self.draw_tilemap()
             self.player.render()
             self.draw_ui()
 
-            # Cập nhật thời gian
             if not self.paused and not self.new_level_ready:
                 current_time = pygame.time.get_ticks()
-                if current_time - self.last_time_update >= 1000:  # 1 giây
+                if current_time - self.last_time_update >= 1000:
                     self.time_left -= 1
                     self.last_time_update = current_time
 
-            # Vẽ các nút và thông tin trên panel trên
             try:
                 button_font = pygame.font.SysFont("timesnewroman", 18, bold=True)
                 button_width, button_height = 90, 35
@@ -303,7 +681,7 @@ class Game:
                 bottom_row_y = 55
                 random_map_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2, bottom_row_y, button_width, button_height)
                 help_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2 + button_width + button_spacing, bottom_row_y, button_width, button_height)
-                level_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2 + 2 * (button_width + button_spacing), bottom_row_y, button_width, button_height)
+                stats_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2 + 2 * (button_width + button_spacing), bottom_row_y, button_width, button_height)
                 exit_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2 + 3 * (button_width + button_spacing), bottom_row_y, button_width, button_height)
 
                 mouse_pos = pygame.mouse.get_pos()
@@ -311,7 +689,7 @@ class Game:
                 pause_color = (255, 215, 0) if pause_button_rect.collidepoint(mouse_pos) else (160, 82, 45)
                 random_map_color = (255, 215, 0) if random_map_button_rect.collidepoint(mouse_pos) else (160, 82, 45)
                 help_color = (255, 215, 0) if help_button_rect.collidepoint(mouse_pos) else (160, 82, 45)
-                level_color = (255, 215, 0) if level_button_rect.collidepoint(mouse_pos) else (160, 82, 45)
+                stats_color = (255, 215, 0) if stats_button_rect.collidepoint(mouse_pos) else (160, 82, 45)
                 exit_color = (255, 215, 0) if exit_button_rect.collidepoint(mouse_pos) else (160, 82, 45)
 
                 pygame.draw.rect(self.screen, replay_color, replay_button_rect, border_radius=8)
@@ -321,26 +699,29 @@ class Game:
 
                 pygame.draw.rect(self.screen, random_map_color, random_map_button_rect, border_radius=8)
                 pygame.draw.rect(self.screen, help_color, help_button_rect, border_radius=8)
-                pygame.draw.rect(self.screen, level_color, level_button_rect, border_radius=8)
+                pygame.draw.rect(self.screen, stats_color, stats_button_rect, border_radius=8)
                 pygame.draw.rect(self.screen, exit_color, exit_button_rect, border_radius=8)
 
                 random_map_text = button_font.render("Random", True, (255, 255, 255))
-                help_text = button_font.render("Trợ giúp", True, (255, 255, 255))
-                level_text = button_font.render("Cấp độ", True, (255, 255, 255))
-                exit_text = button_font.render("Thoát", True, (255, 255, 255))
+                help_text = button_font.render("Help", True, (255, 255, 255))
+                stats_text = button_font.render("Statistics", True, (255, 255, 255))
+                exit_text = button_font.render("Exit", True, (255, 255, 255))
 
                 self.screen.blit(random_map_text, random_map_text.get_rect(center=random_map_button_rect.center))
                 self.screen.blit(help_text, help_text.get_rect(center=help_button_rect.center))
-                self.screen.blit(level_text, level_text.get_rect(center=level_button_rect.center))
+                self.screen.blit(stats_text, stats_text.get_rect(center=stats_button_rect.center))
                 self.screen.blit(exit_text, exit_text.get_rect(center=exit_button_rect.center))
 
-                steps_text = self.font.render(f"Bước: {self.steps}", True, (0, 255, 128), (0, 0, 0))
-                level_text = self.font.render(f"Cấp độ: {self.level}", True, (255, 165, 0), (0, 0, 0))
+                steps_text = self.font.render(f"Steps: {self.steps}", True, (0, 255, 128), (0, 0, 0))
+                level_text = self.font.render(f"Level: {self.level}", True, (255, 165, 0), (0, 0, 0))
                 self.screen.blit(steps_text, (10, 10))
                 self.screen.blit(level_text, (10, 45))
 
             except pygame.error as e:
-                print(f"Error rendering buttons: {e}. Vui lòng kiểm tra font chữ hỗ trợ tiếng Việt.")
+                print(f"Error rendering buttons: {e}")
+
+            if self.show_stats:
+                close_button_rect = self.draw_stats_table()
 
             self.update_exploration()
             self.follow_path()
@@ -353,6 +734,8 @@ class Game:
                         self.reset_game()
                     elif random_map_button_rect.collidepoint(event.pos):
                         self.tilemap = generate_random_map(self.rows, self.cols)
+                        self.goal_pos = (self.rows - 1, self.cols - 1)
+                        self.tilemap[self.goal_pos[0]][self.goal_pos[1]] = "X"
                         self.player.row, self.player.col = self.start_pos
                         self.steps = 0
                         self.path = []
@@ -360,47 +743,43 @@ class Game:
                         self.show_path = False
                         self.set_time_limit()
                         self.new_level_ready = False
+                        self.reset_stats()
+                        self.compute_all_stats()
                     elif help_button_rect.collidepoint(event.pos):
                         self.compute_path()
                     elif pause_button_rect.collidepoint(event.pos):
                         self.paused = not self.paused
-                    elif level_button_rect.collidepoint(event.pos):
-                        print("Level clicked - Implement level logic here")
-                        self.level += 1
-                        self.reset_for_new_level()
+                    elif stats_button_rect.collidepoint(event.pos):
+                        self.show_stats = not self.show_stats
                     elif exit_button_rect.collidepoint(event.pos):
-                        return "QUIT"
+                        pygame.mixer.music.stop()  # Dừng nhạc game nếu có (tùy chọn)
+                        show_start_screen(self.screen)  # Hiển thị giao diện chính
+                        return "MAIN_MENU"  # Trả về trạng thái để main.py xử lý
+                    elif self.show_stats and close_button_rect and close_button_rect.collidepoint(event.pos):
+                        self.show_stats = False
                 elif event.type == pygame.KEYDOWN and not self.paused:
                     if event.key == pygame.K_UP or event.key == pygame.K_w:
                         if self.player.move("UP", self.rows, self.cols, self.tilemap):
                             self.steps += 1
                             self.start_pos = (self.player.row, self.player.col)
-                            # self.compute_path()
-                            # self.path = []
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                         if self.player.move("DOWN", self.rows, self.cols, self.tilemap):
                             self.steps += 1
                             self.start_pos = (self.player.row, self.player.col)
-                            # self.compute_path()
-                            # self.path = []
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
                         if self.player.move("LEFT", self.rows, self.cols, self.tilemap):
                             self.steps += 1
                             self.start_pos = (self.player.row, self.player.col)
-                            # self.compute_path()
-                            # self.path = []
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                         if self.player.move("RIGHT", self.rows, self.cols, self.tilemap):
                             self.steps += 1
                             self.start_pos = (self.player.row, self.player.col)
-                            # self.path = []
-                            # self.compute_path()
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_SPACE:
@@ -440,18 +819,18 @@ class Game:
                         self.new_level_ready = False
                         self.last_time_update = pygame.time.get_ticks()
 
-            # Kiểm tra hết thời gian
             if self.time_left <= 0 and not self.paused and not self.new_level_ready:
-                game_over_text = self.win_font.render("HẾT GIỜ!", True, (255, 0, 0))
-                shadow_text = self.win_font.render("HẾT GIỜ!", True, (0, 0, 0))
+                game_over_text = self.win_font.render("TIME OUT!", True, (255, 0, 0))
+                shadow_text = self.win_font.render("TIME OUT!", True, (0, 0, 0))
                 self.screen.blit(shadow_text, (self.screen.get_width() // 2 - shadow_text.get_width() // 2 + 3, self.screen.get_height() // 2 + 3))
                 self.screen.blit(shadow_text, (self.screen.get_width() // 2 - shadow_text.get_width() // 2 - 3, self.screen.get_height() // 2 - 3))
                 self.screen.blit(game_over_text, (self.screen.get_width() // 2 - game_over_text.get_width() // 2, self.screen.get_height() // 2))
+                if self.lose_sound:
+                    self.lose_sound.play()
                 pygame.display.flip()
                 pygame.time.wait(3000)
-                self.reset_game()
+                self.reset_game()  # Reset về level 1 để chơi lại
 
-            # Kiểm tra thắng
             if self.check_goal() and not self.paused and not self.new_level_ready:
                 if self.win_sound:
                     self.win_sound.play()
@@ -464,7 +843,9 @@ class Game:
                     self.screen.blit(final_win_text, (self.screen.get_width() // 2 - final_win_text.get_width() // 2, self.screen.get_height() // 2))
                     pygame.display.flip()
                     pygame.time.wait(3000)
-                    self.reset_game()
+                    pygame.mixer.music.stop()  # Dừng nhạc game nếu có (tùy chọn)
+                    show_start_screen(self.screen)  # Hiển thị giao diện chính
+                    return "MAIN_MENU"  # Trả về trạng thái để main.py xử lý
                 else:
                     you_win_text = self.win_font.render("YOU WIN!", True, (255, 255, 0))
                     shadow_text = self.win_font.render("YOU WIN!", True, (0, 0, 0))
