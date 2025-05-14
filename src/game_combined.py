@@ -375,24 +375,32 @@ class Game:
                         if self.player.move("UP", self.rows, self.cols, self.tilemap):
                             self.steps += 1
                             self.start_pos = (self.player.row, self.player.col)
-                            self.path = []
+                            # self.compute_path()
+                            # self.path = []
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                         if self.player.move("DOWN", self.rows, self.cols, self.tilemap):
                             self.steps += 1
                             self.start_pos = (self.player.row, self.player.col)
-                            self.path = []
+                            # self.compute_path()
+                            # self.path = []
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
                         if self.player.move("LEFT", self.rows, self.cols, self.tilemap):
                             self.steps += 1
+                            self.start_pos = (self.player.row, self.player.col)
+                            # self.compute_path()
+                            # self.path = []
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                         if self.player.move("RIGHT", self.rows, self.cols, self.tilemap):
                             self.steps += 1
+                            self.start_pos = (self.player.row, self.player.col)
+                            # self.path = []
+                            # self.compute_path()
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_SPACE:
