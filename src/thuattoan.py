@@ -5,9 +5,6 @@ import random
 MOVE_DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Directions: right, down, left, up
 
 def get_neighbors(pos, rows, cols, tilemap):
-    """
-    Get valid neighboring tiles, only blocking trees ("T"), allowing water ("W").
-    """
     r, c = pos
     for dr, dc in MOVE_DIRS:
         nr, nc = r + dr, c + dc
@@ -15,15 +12,9 @@ def get_neighbors(pos, rows, cols, tilemap):
             yield (nr, nc)
 
 def heuristic(a, b):
-    """
-    Manhattan distance heuristic.
-    """
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 def reconstruct_path(parent, start, goal):
-    """
-    Reconstruct the path from start to goal using the parent dictionary.
-    """
     path = []
     curr = goal
     while curr and curr in parent:
@@ -33,9 +24,6 @@ def reconstruct_path(parent, start, goal):
     return path if path and path[0] == start else []
 
 def astar(start, goal, tilemap, tile_cost):
-    """
-    A* Search algorithm.
-    """
     rows, cols = len(tilemap), len(tilemap[0])
     pq = [(0 + heuristic(start, goal), 0, start)]
     cost = {start: 0}
@@ -55,9 +43,6 @@ def astar(start, goal, tilemap, tile_cost):
     return reconstruct_path(parent, start, goal)
 
 def bfs(start, goal, tilemap):
-    """
-    Breadth-First Search algorithm.
-    """
     rows, cols = len(tilemap), len(tilemap[0])
     queue = deque([(start, None)])
     visited = {start}
@@ -75,9 +60,6 @@ def bfs(start, goal, tilemap):
     return reconstruct_path(parent, start, goal)
 
 def beam_search(start, goal, tilemap, beam_width=3):
-    """
-    Beam Search algorithm to find a path.
-    """
     rows, cols = len(tilemap), len(tilemap[0])
     beam = [(heuristic(start, goal), start)]
     parent = {start: None}
@@ -106,9 +88,6 @@ def beam_search(start, goal, tilemap, beam_width=3):
     return []
 
 def and_or_search(start, goal, tilemap):
-    """
-    AND-OR Search algorithm to find a path.
-    """
     rows, cols = len(tilemap), len(tilemap[0])
     visited = set()
     parent = {start: None}
@@ -146,9 +125,6 @@ def and_or_search(start, goal, tilemap):
     return []
 
 def backtracking(start, goal, tilemap, tile_cost):
-    """
-    Backtracking algorithm to find a path.
-    """
     rows, cols = len(tilemap), len(tilemap[0])
     visited = set()
     path = []
@@ -173,9 +149,6 @@ def backtracking(start, goal, tilemap, tile_cost):
     return []
 
 def q_learning(start, goal, tilemap, episodes=1000, alpha=0.1, gamma=0.9, epsilon=0.1):
-    """
-    Q-Learning algorithm to find optimal path.
-    """
     rows, cols = len(tilemap), len(tilemap[0])
     actions = [(0,1), (1,0), (0,-1), (-1,0)]
     

@@ -1,237 +1,13 @@
 import pygame
 import math
 import random
-try:
-    from PIL import Image
-    pillow_available = True
-except ImportError:
-    pillow_available = False
-
-# Khởi tạo pygame
-pygame.init()
-try:
-    pygame.mixer.init()
-except pygame.error as e:
-    print(f"Error initializing mixer: {e}")
-
-# Kích thước màn hình và panel
-WIDTH, HEIGHT = 800, 600
+from thuattoan import *
+from player import Player
+from map_generator import generate_random_map
+from utils import load_image, load_icon
+from ui import load_gif_frames
+import time
 PANEL_TOP_HEIGHT = 100
-PANEL_BOTTOM_HEIGHT = HEIGHT - PANEL_TOP_HEIGHT
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("TRUY TÌM KHO BÁU")
-
-# Load GIF frames cho nền động
-def load_gif_frames(gif_path):
-    frames = []
-    if not pillow_available:
-        print("Pillow not installed, cannot load GIF")
-        return frames
-    try:
-        image = Image.open(gif_path)
-        for frame in range(image.n_frames):
-            image.seek(frame)
-            frame_surface = pygame.image.fromstring(image.tobytes(), image.size, image.mode).convert()
-            frame_surface = pygame.transform.scale(frame_surface, (WIDTH, PANEL_TOP_HEIGHT))
-            frames.append(frame_surface)
-    except Exception as e:
-        print(f"Không thể load ảnh nền động: {e}")
-    return frames
-
-# Hàm tải hình ảnh
-def load_image(filepath, tile_size):
-    image = pygame.image.load(filepath)
-    return pygame.transform.scale(image, (tile_size, tile_size))
-
-# Hàm tải icon với kích thước tùy chỉnh
-def load_icon(filepath, size):
-    icon = pygame.image.load(filepath)
-    return pygame.transform.scale(icon, (size, size))
-
-# Hàm lấy các ô lân cận
-def get_neighbors(pos, rows, cols, tilemap):
-    row, col = pos
-    neighbors = []
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    for dr, dc in directions:
-        new_row, new_col = row + dr, col + dc
-        if 0 <= new_row < rows and 0 <= new_col < cols and tilemap[new_row][new_col] != "T":
-            neighbors.append((new_row, new_col))
-    return neighbors
-
-# Các thuật toán tìm đường
-def astar(start, goal, tilemap, tile_cost):
-    from heapq import heappush, heappop
-    rows, cols = len(tilemap), len(tilemap[0])
-    open_set = []
-    heappush(open_set, (0, start))
-    came_from = {}
-    g_score = {start: 0}
-    f_score = {start: abs(goal[0] - start[0]) + abs(goal[1] - start[1])}
-
-    while open_set:
-        current = heappop(open_set)[1]
-        if current == goal:
-            path = []
-            while current in came_from:
-                path.append(current)
-                current = came_from[current]
-            path.append(start)
-            return path[::-1]
-
-        for neighbor in get_neighbors(current, rows, cols, tilemap):
-            tentative_g_score = g_score[current] + tile_cost[tilemap[neighbor[0]][neighbor[1]]]
-            if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
-                came_from[neighbor] = current
-                g_score[neighbor] = tentative_g_score
-                f_score[neighbor] = g_score[neighbor] + abs(goal[0] - neighbor[0]) + abs(goal[1] - neighbor[1])
-                heappush(open_set, (f_score[neighbor], neighbor))
-    return []
-
-def bfs(start, goal, tilemap):
-    from collections import deque
-    rows, cols = len(tilemap), len(tilemap[0])
-    queue = deque([(start, [start])])
-    visited = {start}
-
-    while queue:
-        (row, col), path = queue.popleft()
-        if (row, col) == goal:
-            return path
-
-        for neighbor in get_neighbors((row, col), rows, cols, tilemap):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append((neighbor, path + [neighbor]))
-    return []
-
-def beam_search(start, goal, tilemap, beam_width=3):
-    from heapq import heappush, heappop
-    rows, cols = len(tilemap), len(tilemap[0])
-    beam = [(0, [start])]
-    visited = {start}
-
-    while beam:
-        new_beam = []
-        for _ in range(min(beam_width, len(beam))):
-            if not beam:
-                break
-            _, path = heappop(beam)
-            current = path[-1]
-            if current == goal:
-                return path
-
-            for neighbor in get_neighbors(current, rows, cols, tilemap):
-                if neighbor not in visited:
-                    visited.add(neighbor)
-                    new_path = path + [neighbor]
-                    score = -(abs(goal[0] - neighbor[0]) + abs(goal[1] - neighbor[1]))
-                    heappush(new_beam, (score, new_path))
-        beam = new_beam
-    return []
-
-def and_or_search(start, goal, tilemap):
-    def solve(pos, path, visited):
-        if pos == goal:
-            return path
-        visited.add(pos)
-        neighbors = get_neighbors(pos, len(tilemap), len(tilemap[0]), tilemap)
-        or_results = []
-        for neighbor in neighbors:
-            if neighbor not in visited:
-                result = solve(neighbor, path + [neighbor], visited.copy())
-                if result:
-                    or_results.append(result)
-        return min(or_results, key=len) if or_results else []
-
-    path = solve(start, [start], set())
-    return path
-
-def q_learning(start, goal, tilemap, episodes=1000, alpha=0.1, gamma=0.9, epsilon=0.1):
-    import numpy as np
-    rows, cols = len(tilemap), len(tilemap[0])
-    q_table = np.zeros((rows, cols, 4))
-    actions = ["UP", "DOWN", "LEFT", "RIGHT"]
-    tile_cost = {"G": 1, "D": 2, "T": float("inf"), "W": 5, "X": 1}
-
-    def get_action(state, epsilon):
-        if random.random() < epsilon:
-            return random.choice(range(4))
-        return np.argmax(q_table[state[0], state[1]])
-
-    def move_action(state, action, rows, cols, tilemap):
-        row, col = state
-        new_row, new_col = row, col
-        if action == 0 and row > 0 and tilemap[row - 1][col] != "T":
-            new_row -= 1
-        elif action == 1 and row < rows - 1 and tilemap[row + 1][col] != "T":
-            new_row += 1
-        elif action == 2 and col > 0 and tilemap[row][col - 1] != "T":
-            new_col -= 1
-        elif action == 3 and col < cols - 1 and tilemap[row][col + 1] != "T":
-            new_col += 1
-        return (new_row, new_col)
-
-    for _ in range(episodes):
-        state = start
-        while state != goal:
-            action = get_action(state, epsilon)
-            next_state = move_action(state, action, rows, cols, tilemap)
-            reward = -tile_cost[tilemap[next_state[0]][next_state[1]]]
-            if next_state == goal:
-                reward = 100
-            q_table[state[0], state[1], action] = (1 - alpha) * q_table[state[0], state[1], action] + \
-                alpha * (reward + gamma * np.max(q_table[next_state[0], next_state[1]]))
-            state = next_state
-
-    path = [start]
-    state = start
-    while state != goal:
-        action = np.argmax(q_table[state[0], state[1]])
-        next_state = move_action(state, action, rows, cols, tilemap)
-        if next_state == state:
-            break
-        path.append(next_state)
-        state = next_state
-    return path
-
-# Class Player
-class Player:
-    def __init__(self, screen, sprite, start_pos=(0, 0), tile_size=64):
-        self.screen = screen
-        self.sprite = pygame.transform.scale(sprite, (tile_size, tile_size))
-        self.row, self.col = start_pos
-        self.tile_size = tile_size
-
-    def move(self, direction, rows, cols, tilemap):
-        new_row, new_col = self.row, self.col
-        if direction == "UP" and self.row > 0 and tilemap[self.row - 1][self.col] != "T":
-            new_row -= 1
-        elif direction == "DOWN" and self.row < rows - 1 and tilemap[self.row + 1][self.col] != "T":
-            new_row += 1
-        elif direction == "LEFT" and self.col > 0 and tilemap[self.row][self.col - 1] != "T":
-            new_col -= 1
-        elif direction == "RIGHT" and self.col < cols - 1 and tilemap[self.row][self.col + 1] != "T":
-            new_col += 1
-        
-        if (new_row, new_col) != (self.row, self.col):
-            self.row, self.col = new_row, new_col
-            return True
-        return False
-
-    def render(self):
-        x = self.col * self.tile_size
-        y = self.row * self.tile_size + PANEL_TOP_HEIGHT
-        self.screen.blit(self.sprite, (x, y))
-
-# Hàm tạo bản đồ ngẫu nhiên
-def generate_random_map(rows, cols):
-    TILE_TYPES = ["G", "D", "T", "W"]
-    tilemap = [[random.choice(TILE_TYPES) for _ in range(cols)] for _ in range(rows)]
-    # Đảm bảo vị trí xuất phát (0, 0) và kho báu (rows-1, cols-1) không phải cây ("T")
-    tilemap[0][0] = "G"
-    tilemap[rows - 1][cols - 1] = "X"
-    return tilemap
 
 # Class Game
 class Game:
@@ -243,7 +19,7 @@ class Game:
 
         # Load GIF frames
         self.gif_path = r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\src\hinhnen.gif"
-        self.gif_frames = load_gif_frames(self.gif_path)
+        self.gif_frames = load_gif_frames(self.gif_path, screen)
         self.frame_count = len(self.gif_frames)
         self.current_frame = 0
         self.frame_timer = 0
@@ -270,9 +46,14 @@ class Game:
             self.win_sound = None
 
         # Khởi tạo bản đồ và vị trí
+        # self.start_pos = (0, 0)
+        # self.goal_pos = (rows - 1, cols - 1)
+        # self.tilemap = generate_random_map(rows, cols)
+
+        self.tilemap = generate_random_map(self.rows, self.cols)
         self.start_pos = (0, 0)
-        self.goal_pos = (rows - 1, cols - 1)
-        self.tilemap = generate_random_map(rows, cols)
+        self.goal_pos = (self.rows - 1, self.cols - 1)
+        self.tilemap[self.goal_pos[0]][self.goal_pos[1]] = "X"
 
         # Initialize player
         blocky_sprite = pygame.image.load(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\blocky.png")
@@ -298,6 +79,7 @@ class Game:
         self.move_delay = 200
         self.current_algorithm = "astar"
         self.show_path = False
+        self.auto_move_enabled = False
 
         # Tile costs for A*, Backtracking, and Q-Learning
         self.tile_cost = {
@@ -316,7 +98,6 @@ class Game:
         self.last_explore_time = 0
         self.explore_delay = 50
         self.is_exploring = False
-        self.auto_move_enabled = False
 
     def draw_tilemap(self):
         for row in range(len(self.tilemap)):
@@ -324,6 +105,7 @@ class Game:
                 tile = self.tilemap[row][col]
                 x = col * self.tile_size
                 y = row * self.tile_size + PANEL_TOP_HEIGHT
+
                 if tile == "G":
                     self.screen.blit(self.grass_img, (x, y))
                 elif tile == "D":
@@ -348,14 +130,15 @@ class Game:
     def draw_ui(self):
         # Hiển thị thuật toán
         algo_text = self.font.render(f"Algorithm: {self.current_algorithm.upper()}", True, (255, 255, 255))
-        self.screen.blit(algo_text, (WIDTH - algo_text.get_width() - 10, 10))
+        self.screen.blit(algo_text, (self.screen.get_width() - algo_text.get_width() - 10, 10))
         # Hiển thị thời gian
         time_text = self.font.render(f"Thời gian: {int(self.time_left)}", True, (255, 255, 255))
-        self.screen.blit(time_text, (WIDTH - time_text.get_width() - 10, 45))
+        self.screen.blit(time_text, (self.screen.get_width() - time_text.get_width() - 10, 45))
+
         # Hiển thị thông báo bắt đầu level
         if self.new_level_ready:
             start_text = self.font.render("Nhấn Enter để bắt đầu!", True, (255, 255, 0))
-            self.screen.blit(start_text, (WIDTH // 2 - start_text.get_width() // 2, HEIGHT // 2))
+            self.screen.blit(start_text, (self.screen.get_width() // 2 - start_text.get_width() // 2, self.screen.get_height() // 2))
 
     def compute_path(self):
         self.path = []
@@ -369,34 +152,15 @@ class Game:
         if self.current_algorithm == "astar":
             self.path = astar(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
         elif self.current_algorithm == "bfs":
-            self.path = astar(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
+            self.path = bfs(self.start_pos, self.goal_pos, self.tilemap)
         elif self.current_algorithm == "beam_search":
             self.path = beam_search(self.start_pos, self.goal_pos, self.tilemap)
         elif self.current_algorithm == "AndOr":
             self.path = and_or_search(self.start_pos, self.goal_pos, self.tilemap)
         elif self.current_algorithm == "backtracking":
             self.is_exploring = True
-            visited = set()
-            path = []
-
-            def backtrack(curr):
-                self.exploration_list.append(curr)
-                if curr == self.goal_pos:
-                    path.append(curr)
-                    return True
-                if curr in visited:
-                    return False
-                visited.add(curr)
-                path.append(curr)
-                for neighbor in get_neighbors(curr, self.rows, self.cols, self.tilemap):
-                    if backtrack(neighbor):
-                        return True
-                path.pop()
-                visited.remove(curr)
-                return False
-
-            if backtrack(self.start_pos):
-                self.path = path
+            self.path = backtracking(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
+            self.exploration_list = self.path  # Use path for exploration visualization
             self.explored_tiles = set(self.exploration_list)
         elif self.current_algorithm == "q_learning":
             self.path = q_learning(self.start_pos, self.goal_pos, self.tilemap)
@@ -439,6 +203,7 @@ class Game:
             if direction:
                 if self.player.move(direction, self.rows, self.cols, self.tilemap):
                     self.steps += 1
+                    self.start_pos = (self.player.row, self.player.col)
                     self.path_index += 1
                     self.last_move_time = current_time
                 else:
@@ -452,7 +217,7 @@ class Game:
             self.time_limit = 60
         elif self.level == 2:
             self.time_limit = 40
-        else:  # Level 3 or higher
+        elif self.level == 3:
             self.time_limit = 20
         self.time_left = self.time_limit
         self.last_time_update = pygame.time.get_ticks()
@@ -507,12 +272,12 @@ class Game:
                         self.frame_timer = 0
                     self.screen.blit(self.gif_frames[self.current_frame], (0, 0))
                 else:
-                    self.screen.fill((0, 105, 148), (0, 0, WIDTH, PANEL_TOP_HEIGHT))
+                    self.screen.fill((0, 105, 148), (0, 0, self.screen.get_width(), PANEL_TOP_HEIGHT))
             except pygame.error as e:
                 print(f"Error rendering top panel background: {e}")
 
             # Vẽ panel dưới với bản đồ
-            self.screen.fill((30, 30, 30), (0, PANEL_TOP_HEIGHT, WIDTH, PANEL_BOTTOM_HEIGHT))
+            self.screen.fill((30, 30, 30), (0, PANEL_TOP_HEIGHT, self.screen.get_width(), self.screen.get_height() - PANEL_TOP_HEIGHT))
             self.draw_tilemap()
             self.player.render()
             self.draw_ui()
@@ -532,14 +297,14 @@ class Game:
                 button_spacing = 10
 
                 top_row_y = 10
-                replay_button_rect = pygame.Rect((WIDTH - 2 * icon_button_size - button_spacing) // 2, top_row_y, icon_button_size, icon_button_size)
-                pause_button_rect = pygame.Rect((WIDTH - 2 * icon_button_size - button_spacing) // 2 + icon_button_size + button_spacing, top_row_y, icon_button_size, icon_button_size)
+                replay_button_rect = pygame.Rect((self.screen.get_width() - 2 * icon_button_size - button_spacing) // 2, top_row_y, icon_button_size, icon_button_size)
+                pause_button_rect = pygame.Rect((self.screen.get_width() - 2 * icon_button_size - button_spacing) // 2 + icon_button_size + button_spacing, top_row_y, icon_button_size, icon_button_size)
 
                 bottom_row_y = 55
-                random_map_button_rect = pygame.Rect((WIDTH - 4 * button_width - 3 * button_spacing) // 2, bottom_row_y, button_width, button_height)
-                help_button_rect = pygame.Rect((WIDTH - 4 * button_width - 3 * button_spacing) // 2 + button_width + button_spacing, bottom_row_y, button_width, button_height)
-                level_button_rect = pygame.Rect((WIDTH - 4 * button_width - 3 * button_spacing) // 2 + 2 * (button_width + button_spacing), bottom_row_y, button_width, button_height)
-                exit_button_rect = pygame.Rect((WIDTH - 4 * button_width - 3 * button_spacing) // 2 + 3 * (button_width + button_spacing), bottom_row_y, button_width, button_height)
+                random_map_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2, bottom_row_y, button_width, button_height)
+                help_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2 + button_width + button_spacing, bottom_row_y, button_width, button_height)
+                level_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2 + 2 * (button_width + button_spacing), bottom_row_y, button_width, button_height)
+                exit_button_rect = pygame.Rect((self.screen.get_width() - 4 * button_width - 3 * button_spacing) // 2 + 3 * (button_width + button_spacing), bottom_row_y, button_width, button_height)
 
                 mouse_pos = pygame.mouse.get_pos()
                 replay_color = (255, 215, 0) if replay_button_rect.collidepoint(mouse_pos) else (160, 82, 45)
@@ -609,11 +374,15 @@ class Game:
                     if event.key == pygame.K_UP or event.key == pygame.K_w:
                         if self.player.move("UP", self.rows, self.cols, self.tilemap):
                             self.steps += 1
+                            self.start_pos = (self.player.row, self.player.col)
+                            self.path = []
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                         if self.player.move("DOWN", self.rows, self.cols, self.tilemap):
                             self.steps += 1
+                            self.start_pos = (self.player.row, self.player.col)
+                            self.path = []
                             self.auto_move_enabled = False
                             self.new_level_ready = False
                     elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
@@ -679,31 +448,27 @@ class Game:
                 if self.win_sound:
                     self.win_sound.play()
 
-                you_win_text = self.win_font.render("YOU WIN!", True, (255, 255, 0))
-                shadow_text = self.win_font.render("YOU WIN!", True, (0, 0, 0))
-                self.screen.blit(shadow_text, (self.screen.get_width() // 2 - shadow_text.get_width() // 2 + 3, self.screen.get_height() // 2 + 3))
-                self.screen.blit(shadow_text, (self.screen.get_width() // 2 - shadow_text.get_width() // 2 - 3, self.screen.get_height() // 2 - 3))
-                self.screen.blit(you_win_text, (self.screen.get_width() // 2 - you_win_text.get_width() // 2, self.screen.get_height() // 2))
-                pygame.display.flip()
-                pygame.time.wait(3000)
-
-                self.level += 1
-                self.reset_for_new_level()
+                if self.level >= 3:
+                    final_win_text = self.win_font.render("CONGRATULATIONS!", True, (255, 215, 0))
+                    shadow_text = self.win_font.render("CONGRATULATIONS!", True, (0, 0, 0))
+                    self.screen.blit(shadow_text, (self.screen.get_width() // 2 - shadow_text.get_width() // 2 + 3, self.screen.get_height() // 2 + 3))
+                    self.screen.blit(shadow_text, (self.screen.get_width() // 2 - shadow_text.get_width() // 2 - 3, self.screen.get_height() // 2 - 3))
+                    self.screen.blit(final_win_text, (self.screen.get_width() // 2 - final_win_text.get_width() // 2, self.screen.get_height() // 2))
+                    pygame.display.flip()
+                    pygame.time.wait(3000)
+                    self.reset_game()
+                else:
+                    you_win_text = self.win_font.render("YOU WIN!", True, (255, 255, 0))
+                    shadow_text = self.win_font.render("YOU WIN!", True, (0, 0, 0))
+                    self.screen.blit(shadow_text, (self.screen.get_width() // 2 - shadow_text.get_width() // 2 + 3, self.screen.get_height() // 2 + 3))
+                    self.screen.blit(shadow_text, (self.screen.get_width() // 2 - shadow_text.get_width() // 2 - 3, self.screen.get_height() // 2 - 3))
+                    self.screen.blit(you_win_text, (self.screen.get_width() // 2 - you_win_text.get_width() // 2, self.screen.get_height() // 2))
+                    pygame.display.flip()
+                    pygame.time.wait(3000)
+                    self.level += 1
+                    self.reset_for_new_level()
 
             pygame.display.flip()
             clock.tick(60)
 
         return "Level Complete"
-
-if __name__ == "__main__":
-    rows = PANEL_BOTTOM_HEIGHT // 64
-    cols = WIDTH // 64
-    game = Game(screen, 64, rows, cols)
-    while True:
-        result = game.run()
-        if result == "QUIT":
-            pygame.quit()
-            break
-        elif result == "Level Complete":
-            pygame.quit()
-            break

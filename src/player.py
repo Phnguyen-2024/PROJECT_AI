@@ -6,26 +6,25 @@ class Player:
         self.sprite = pygame.transform.scale(sprite, (tile_size, tile_size))
         self.row, self.col = start_pos
         self.tile_size = tile_size
+        self.PANEL_TOP_HEIGHT = 100
 
     def move(self, direction, rows, cols, tilemap):
-        prev_row, prev_col = self.row, self.col
-
-        if direction == "UP" and self.row > 0:
-            if tilemap[self.row - 1][self.col] != "T":
-                self.row -= 1
-        elif direction == "DOWN" and self.row < rows - 1:
-            if tilemap[self.row + 1][self.col] != "T":
-                self.row += 1
-        elif direction == "LEFT" and self.col > 0:
-            if tilemap[self.row][self.col - 1] != "T":
-                self.col -= 1
-        elif direction == "RIGHT" and self.col < cols - 1:
-            if tilemap[self.row][self.col + 1] != "T":
-                self.col += 1
-
-        return (self.row, self.col) != (prev_row, prev_col)
+        new_row, new_col = self.row, self.col
+        if direction == "UP" and self.row > 0 and tilemap[self.row - 1][self.col] != "T":
+            new_row -= 1
+        elif direction == "DOWN" and self.row < rows - 1 and tilemap[self.row + 1][self.col] != "T":
+            new_row += 1
+        elif direction == "LEFT" and self.col > 0 and tilemap[self.row][self.col - 1] != "T":
+            new_col -= 1
+        elif direction == "RIGHT" and self.col < cols - 1 and tilemap[self.row][self.col + 1] != "T":
+            new_col += 1
+        
+        if (new_row, new_col) != (self.row, self.col):
+            self.row, self.col = new_row, new_col
+            return True
+        return False
 
     def render(self):
         x = self.col * self.tile_size
-        y = self.row * self.tile_size
+        y = self.row * self.tile_size + self.PANEL_TOP_HEIGHT
         self.screen.blit(self.sprite, (x, y))
