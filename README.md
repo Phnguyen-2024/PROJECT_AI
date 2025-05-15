@@ -1,60 +1,76 @@
-# Pygame Map Project
+# Treasure Haunting Game Project
 
-## Overview
-This project is a simple Pygame application that generates a visually appealing and randomly generated tile map. The map consists of various tile types, including grass, dirt, trees, and water. The application serves as a foundation for creating more complex games or simulations using tile-based graphics.
+## Mô tả
+
 
 ## Project Structure
 ```
-pygame-map-project/
-│
-├── assets/
-│   ├── map/
-│   │   ├── grass.png
-│   │   ├── dirt.png
-│   │   ├── tree.png
-│   │   ├── water_16px.png
-│   │   ├── treasure.png
-│   ├── character/
-│       ├── blocky.png
-│
+PROJECT_AI/
 ├── src/
-│   ├── [main.py](http://_vscodecontentref_/1)               # Tệp chính để chạy trò chơi
-│   ├── game.py               # Logic chính của trò chơi
-│   ├── player.py             # Quản lý nhân vật
-│   ├── map_generator.py      # Sinh bản đồ ngẫu nhiên
-│   ├── utils.py              # Các hàm tiện ích
-│   ├── ui.py                 # Quản lý giao diện người dùng
+│   ├── main.py           # Menu chính
+│   ├── game_combined.py  # Logic game
+│   ├── thuattoan.py      # Thuật toán AI
+│   ├── player.py         # Tạo nhân vật
+│   ├── map_generator.py  # Tạo map
+│   └── ui.py             # Thành phần giao diện
+├── assets/
+│   ├── map/              # Hình ảnh
+│   └── sounds/           # Hiệu ứng âm thanh
+└── README.md
 ```
 
-## Files Description
+## Giao diện game
+### Menu chính
+![Main Menu](picture/menu.png)
 
-- **src/main.py**: The entry point of the application. It initializes Pygame, sets up the display, and contains the main game loop that handles events and rendering.
+### Màn hình chơi game
+![Gameplay](picture/gameplay.png)
 
-- **src/map_generator.py**: Contains functions to generate a random tilemap for the game. It exports a function `generate_random_map` that creates a 2D list representing the map layout using different tile types.
+## Demo gameplay
+### BFS Pathfinding
+![Breadth - First Search](picture/bfs.gif)
 
-- **src/utils.py**: Includes utility functions that assist with loading images and scaling them for display. It exports functions like `load_image` which loads and scales images based on the specified tile size.
+### A* Pathfinding
+![A* Search](picture/astar.gif)
 
-- **assets/map/dirt.png**: Image file representing dirt tiles used in the map.
+### Beam Search
+![Beam Search](picture/beam.gif)
 
-- **assets/map/grass.png**: Image file representing grass tiles used in the map.
+### And - Or Search
+![And - Or Search](picture/andor.gif)
 
-- **assets/map/tree.png**: Image file representing tree tiles used in the map.
+### Backtracking
+![Backtracking](picture/backtracking.gif)
 
-- **assets/map/water_16px.png**: Image file representing water tiles used in the map.
+### Q-Learning
+![Q-Learning](picture/qlearning.gif)
 
-## Setup Instructions
-1. Ensure you have Python and Pygame installed on your system.
-2. Clone this repository or download the project files.
-3. Navigate to the project directory in your terminal.
-4. Run the application using the command:
-   ```
-   python src/main.py
-   ```
 
-## Features
-- Randomly generated tile maps with different terrain types.
-- Full-screen interface for an immersive experience.
-- Easy to extend and modify for additional features or game mechanics.
+## So sánh thuật toán
 
-## License
-This project is open-source and available for modification and distribution under the MIT License.
+### Bảng so sánh
+![Bảng so sánh](picture/compare.gif)
+
+### Phân tích
+1. **A*** 
+
+
+2. **BFS**
+
+
+3. **Beam Search**
+
+
+4. **AND-OR Search**
+
+
+5. **Backtracking**
+
+
+6. **Q-Learning**
+
+
+## Công nghệ sử dụng
+- Python
+- Pygame
+- NumPy
