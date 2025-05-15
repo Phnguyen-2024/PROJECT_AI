@@ -6,7 +6,7 @@ from thuattoan import *
 from player import Player
 from map_generator import generate_random_map
 from utils import load_image, load_icon
-from ui import load_gif_frames, show_start_screen  # Import hàm show_start_screen
+from ui import load_gif_frames, show_start_screen
 PANEL_TOP_HEIGHT = 100
 
 class Game:
@@ -17,27 +17,27 @@ class Game:
         self.cols = cols
     
         # Load GIF frames
-        self.gif_path = r"D:\PROJECT_AI\src\hinhnen.gif"
+        self.gif_path = r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\src\hinhnen.gif"
         self.gif_frames = load_gif_frames(self.gif_path, screen)
         self.frame_count = len(self.gif_frames)
         self.current_frame = 0
         self.frame_timer = 0
 
         # Load images
-        self.grass_img = load_image(r"D:\PROJECT_AI\assets\map\grass.png", tile_size)
-        self.dirt_img = load_image(r"D:\PROJECT_AI\assets\map\dirt.png", tile_size)
-        self.trees_img = load_image(r"D:\PROJECT_AI\assets\map\tree.png", tile_size)
-        self.water_img = load_image(r"D:\PROJECT_AI\assets\map\water_16px.png", tile_size)
-        self.treasure_img = load_image(r"D:\PROJECT_AI\assets\map\treasure.png", tile_size)
+        self.grass_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\grass.png", tile_size)
+        self.dirt_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\dirt.png", tile_size)
+        self.trees_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\tree.png", tile_size)
+        self.water_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\water_16px.png", tile_size)
+        self.treasure_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\treasure.png", tile_size)
 
         # Load icons for buttons
-        self.replay_icon = load_icon(r"D:\PROJECT_AI\assets\replay_icon.png", 24)
-        self.pause_icon = load_icon(r"D:\PROJECT_AI\assets\pause_icon.png", 24)
+        self.replay_icon = load_icon(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\replay_icon.png", 24)
+        self.pause_icon = load_icon(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\pause_icon.png", 24)
 
         # Load win and lose sounds
         try:
-            self.win_sound = pygame.mixer.Sound(r"D:\PROJECT_AI\assets\win.mp3")
-            self.lose_sound = pygame.mixer.Sound(r"D:\PROJECT_AI\assets\losing.mp3")
+            self.win_sound = pygame.mixer.Sound(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\win.mp3")
+            self.lose_sound = pygame.mixer.Sound(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\losing.mp3")
         except pygame.error as e:
             print(f"Cannot load sound: {e}")
             self.win_sound = None
@@ -50,7 +50,7 @@ class Game:
         self.tilemap[self.goal_pos[0]][self.goal_pos[1]] = "X"
 
         # Initialize player
-        blocky_sprite = pygame.image.load(r"D:\PROJECT_AI\assets\map\blocky.png")
+        blocky_sprite = pygame.image.load(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\blocky.png")
         self.player = Player(screen, blocky_sprite, start_pos=self.start_pos, tile_size=tile_size)
 
         # Game state
@@ -84,13 +84,16 @@ class Game:
         self.path_overlay = pygame.Surface((tile_size, tile_size), pygame.SRCALPHA)
         self.path_overlay.fill((255, 255, 0, 200))
         self.exploration_overlay = pygame.Surface((tile_size, tile_size), pygame.SRCALPHA)
-        self.exploration_overlay.fill((0, 255, 0, 64))
+        self.exploration_overlay.fill((0, 255, 0, 100))  # Đậm hơn: từ 64 -> 100
+        self.active_exploration_overlay = pygame.Surface((tile_size, tile_size), pygame.SRCALPHA)
+        self.active_exploration_overlay.fill((0, 255, 0, 200))  # Đậm hơn: từ 128 -> 200
         self.explored_tiles = set()
         self.exploration_index = 0
         self.exploration_list = []
         self.last_explore_time = 0
-        self.explore_delay = 50
+        self.explore_delay = 300
         self.is_exploring = False
+        self.current_explored_tile = None
 
         # Statistics for algorithms
         self.stats = {
@@ -124,8 +127,11 @@ class Game:
                 elif tile == "X":
                     self.screen.blit(self.treasure_img, (x, y))
 
-                if self.current_algorithm == "backtracking" and (row, col) in self.explored_tiles:
-                    self.screen.blit(self.exploration_overlay, (x, y))
+                if self.current_algorithm == "backtracking":
+                    if (row, col) == self.current_explored_tile:
+                        self.screen.blit(self.active_exploration_overlay, (x, y))
+                    elif (row, col) in self.explored_tiles:
+                        self.screen.blit(self.exploration_overlay, (x, y))
 
                 if self.show_path and self.path and (row, col) in self.path and (row, col) != self.goal_pos:
                     self.screen.blit(self.path_overlay, (x, y))
@@ -143,54 +149,47 @@ class Game:
             self.screen.blit(start_text, (self.screen.get_width() // 2 - start_text.get_width() // 2, self.screen.get_height() // 2))
 
     def draw_stats_table(self):
-        # Tạo một surface cho bảng thống kê với nền trắng
         table_width = 700
         table_height = 400
         table_x = (self.screen.get_width() - table_width) // 2
         table_y = (self.screen.get_height() - table_height) // 2
         table_surface = pygame.Surface((table_width, table_height))
-        table_surface.fill((255, 255, 255))  # Nền trắng
+        table_surface.fill((255, 255, 255))
 
-        # Tạo viền cho bảng
         pygame.draw.rect(table_surface, (0, 0, 0), (0, 0, table_width, table_height), 2)
 
-        algo_col_width = 180  # Tăng chiều rộng cột Algorithm
-        other_col_width = 110  # Chiều rộng cho các cột khác
+        algo_col_width = 180
+        other_col_width = 110
         row_height = 40
         header_font = pygame.font.SysFont("Times New Roman", 24, bold=True)
         cell_font = pygame.font.SysFont("Times New Roman", 20)
         title_font = pygame.font.SysFont("Times New Roman", 30, bold=True)
 
-        # Vẽ tiêu đề
-        title_text = title_font.render("So sánh thuật toán", True, (0, 0, 255))  # Tiêu đề màu xanh dương
+        title_text = title_font.render("So sánh thuật toán", True, (0, 0, 255))
         title_rect = title_text.get_rect(center=(table_width // 2, 30))
         table_surface.blit(title_text, title_rect)
 
         headers = ["Algorithm", "Time (s)", "Cost", "Nodes", "Steps"]
         algorithms = ["astar", "bfs", "beam_search", "AndOr", "backtracking", "q_learning"]
 
-        # Tính toán vị trí cho từng cột
-        col_positions = [20]  # Lùi vào 20px từ lề trái
-        col_positions.append(col_positions[-1] + algo_col_width)  # Time (s)
-        col_positions.append(col_positions[-1] + other_col_width)  # Cost
-        col_positions.append(col_positions[-1] + other_col_width)  # Nodes
-        col_positions.append(col_positions[-1] + other_col_width)  # Steps
+        col_positions = [20]
+        col_positions.append(col_positions[-1] + algo_col_width)
+        col_positions.append(col_positions[-1] + other_col_width)
+        col_positions.append(col_positions[-1] + other_col_width)
+        col_positions.append(col_positions[-1] + other_col_width)
 
-        # Vẽ hàng tiêu đề
         header_y = 70
         for i, header in enumerate(headers):
             pygame.draw.rect(table_surface, (200, 200, 200), (col_positions[i], header_y, 
-                            algo_col_width if i == 0 else other_col_width, row_height))  # Nền xám nhạt cho tiêu đề
+                            algo_col_width if i == 0 else other_col_width, row_height))
             pygame.draw.rect(table_surface, (0, 0, 0), (col_positions[i], header_y, 
-                            algo_col_width if i == 0 else other_col_width, row_height), 1)  # Viền đen
-            text = header_font.render(header, True, (0, 0, 0))  # Chữ đen
+                            algo_col_width if i == 0 else other_col_width, row_height), 1)
+            text = header_font.render(header, True, (0, 0, 0))
             text_rect = text.get_rect(center=(col_positions[i] + (algo_col_width if i == 0 else other_col_width) // 2, header_y + row_height // 2))
             table_surface.blit(text, text_rect)
 
-        # Vẽ các hàng dữ liệu
         for row, algo in enumerate(algorithms):
             row_y = header_y + (row + 1) * row_height
-            # Tô màu xen kẽ cho các hàng (trắng và xám nhạt)
             row_color = (240, 240, 240) if row % 2 else (255, 255, 255)
             for i in range(len(headers)):
                 pygame.draw.rect(table_surface, row_color, (col_positions[i], row_y, 
@@ -198,36 +197,30 @@ class Game:
                 pygame.draw.rect(table_surface, (0, 0, 0), (col_positions[i], row_y, 
                                 algo_col_width if i == 0 else other_col_width, row_height), 1)
 
-            # Cột Algorithm
             text = cell_font.render(algo.upper(), True, (0, 0, 0))
             text_rect = text.get_rect(center=(col_positions[0] + algo_col_width // 2, row_y + row_height // 2))
             table_surface.blit(text, text_rect)
 
-            # Cột Time (s)
             time_val = f"{self.stats[algo]['time']:.6f}"
             text = cell_font.render(time_val, True, (0, 0, 0))
             text_rect = text.get_rect(center=(col_positions[1] + other_col_width // 2, row_y + row_height // 2))
             table_surface.blit(text, text_rect)
 
-            # Cột Cost
             cost_val = f"{self.stats[algo]['cost']}"
             text = cell_font.render(cost_val, True, (0, 0, 0))
             text_rect = text.get_rect(center=(col_positions[2] + other_col_width // 2, row_y + row_height // 2))
             table_surface.blit(text, text_rect)
 
-            # Cột Nodes
             nodes_val = f"{self.stats[algo]['nodes']}"
             text = cell_font.render(nodes_val, True, (0, 0, 0))
             text_rect = text.get_rect(center=(col_positions[3] + other_col_width // 2, row_y + row_height // 2))
             table_surface.blit(text, text_rect)
 
-            # Cột Steps
             steps_val = f"{self.stats[algo]['steps']}"
             text = cell_font.render(steps_val, True, (0, 0, 0))
             text_rect = text.get_rect(center=(col_positions[4] + other_col_width // 2, row_y + row_height // 2))
             table_surface.blit(text, text_rect)
 
-        # Vẽ nút "Close"
         close_button_rect = pygame.Rect(table_width - 120, table_height - 50, 100, 40)
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos_in_table = (mouse_pos[0] - table_x, mouse_pos[1] - table_y)
@@ -237,15 +230,10 @@ class Game:
         close_text_rect = close_text.get_rect(center=close_button_rect.center)
         table_surface.blit(close_text, close_text_rect)
 
-        # Tạo một lớp phủ tối mờ cho toàn màn hình
         overlay = pygame.Surface((self.screen.get_width(), self.screen.get_height()), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 150))  # Lớp phủ tối mờ
+        overlay.fill((0, 0, 0, 150))
         self.screen.blit(overlay, (0, 0))
-
-        # Vẽ bảng lên màn hình
         self.screen.blit(table_surface, (table_x, table_y))
-
-        # Trả về rect của nút "Close" với tọa độ toàn màn hình
         return close_button_rect.move(table_x, table_y)
 
     def compute_path(self):
@@ -256,8 +244,9 @@ class Game:
         self.exploration_index = 0
         self.is_exploring = False
         self.show_path = True
+        self.current_explored_tile = None
 
-        start_time = time.perf_counter()  # Sử dụng perf_counter
+        start_time = time.perf_counter()
         nodes_explored = 0
         path = []
 
@@ -271,9 +260,9 @@ class Game:
             path, nodes_explored = self.and_or_search_with_stats(self.start_pos, self.goal_pos, self.tilemap)
         elif self.current_algorithm == "backtracking":
             self.is_exploring = True
-            path, nodes_explored = self.backtracking_with_stats(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
-            self.exploration_list = path
-            self.explored_tiles = set(self.exploration_list)
+            path, nodes_explored, exploration_order = self.backtracking_with_stats(self.start_pos, self.goal_pos, self.tilemap, self.tile_cost)
+            self.exploration_list = exploration_order
+            self.explored_tiles = set()
         elif self.current_algorithm == "q_learning":
             path, nodes_explored = self.q_learning_with_stats(self.start_pos, self.goal_pos, self.tilemap)
 
@@ -445,6 +434,7 @@ class Game:
         rows, cols = len(tilemap), len(tilemap[0])
         visited = set()
         path = []
+        exploration_order = []
         nodes_explored = 0
 
         def backtrack(curr):
@@ -452,10 +442,12 @@ class Game:
             nodes_explored += 1
             if curr == goal:
                 path.append(curr)
+                exploration_order.append(curr)
                 return True
             if curr in visited:
                 return False
             visited.add(curr)
+            exploration_order.append(curr)
             path.append(curr)
             for neighbor in get_neighbors(curr, rows, cols, tilemap):
                 if backtrack(neighbor):
@@ -465,8 +457,8 @@ class Game:
             return False
 
         if backtrack(start):
-            return path, nodes_explored
-        return [], nodes_explored
+            return path, nodes_explored, exploration_order
+        return [], nodes_explored, exploration_order
 
     def q_learning_with_stats(self, start, goal, tilemap, episodes=1000, alpha=0.1, gamma=0.9, epsilon=0.1):
         rows, cols = len(tilemap), len(tilemap[0])
@@ -541,11 +533,15 @@ class Game:
             return
         current_time = pygame.time.get_ticks()
         if self.exploration_index < len(self.exploration_list) and current_time - self.last_explore_time > self.explore_delay:
-            tile = self.exploration_list[self.exploration_index]
-            self.explored_tiles.add(tile)
+            if self.current_explored_tile:
+                self.explored_tiles.add(self.current_explored_tile)
+            self.current_explored_tile = self.exploration_list[self.exploration_index]
             self.exploration_index += 1
             self.last_explore_time = current_time
         elif self.exploration_index >= len(self.exploration_list):
+            if self.current_explored_tile:
+                self.explored_tiles.add(self.current_explored_tile)
+            self.current_explored_tile = None
             self.is_exploring = False
 
     def follow_path(self):
@@ -612,6 +608,7 @@ class Game:
         self.is_exploring = False
         self.auto_move_enabled = False
         self.show_path = False
+        self.current_explored_tile = None
         self.set_time_limit()
         self.new_level_ready = True
         self.reset_stats()
@@ -633,6 +630,7 @@ class Game:
         self.is_exploring = False
         self.auto_move_enabled = False
         self.show_path = False
+        self.current_explored_tile = None
         self.set_time_limit()
         self.new_level_ready = False
         self.paused = False
@@ -752,9 +750,9 @@ class Game:
                     elif stats_button_rect.collidepoint(event.pos):
                         self.show_stats = not self.show_stats
                     elif exit_button_rect.collidepoint(event.pos):
-                        pygame.mixer.music.stop()  # Dừng nhạc game nếu có (tùy chọn)
-                        show_start_screen(self.screen)  # Hiển thị giao diện chính
-                        return "MAIN_MENU"  # Trả về trạng thái để main.py xử lý
+                        pygame.mixer.music.stop()
+                        show_start_screen(self.screen)
+                        return "MAIN_MENU"
                     elif self.show_stats and close_button_rect and close_button_rect.collidepoint(event.pos):
                         self.show_stats = False
                 elif event.type == pygame.KEYDOWN and not self.paused:
@@ -829,7 +827,7 @@ class Game:
                     self.lose_sound.play()
                 pygame.display.flip()
                 pygame.time.wait(3000)
-                self.reset_game()  # Reset về level 1 để chơi lại
+                self.reset_game()
 
             if self.check_goal() and not self.paused and not self.new_level_ready:
                 if self.win_sound:
@@ -843,9 +841,10 @@ class Game:
                     self.screen.blit(final_win_text, (self.screen.get_width() // 2 - final_win_text.get_width() // 2, self.screen.get_height() // 2))
                     pygame.display.flip()
                     pygame.time.wait(3000)
-                    pygame.mixer.music.stop()  # Dừng nhạc game nếu có (tùy chọn)
-                    show_start_screen(self.screen)  # Hiển thị giao diện chính
-                    return "MAIN_MENU"  # Trả về trạng thái để main.py xử lý
+                    pygame.mixer.music.stop()
+                    show_start_screen(self.screen)
+                    self.reset_game()
+                    return "MAIN_MENU"
                 else:
                     you_win_text = self.win_font.render("YOU WIN!", True, (255, 255, 0))
                     shadow_text = self.win_font.render("YOU WIN!", True, (0, 0, 0))

@@ -88,96 +88,6 @@ def beam_search(start, goal, tilemap, beam_width=3):
 
     return []
 
-# def and_or_search(start, goal, tilemap):
-#     rows, cols = len(tilemap), len(tilemap[0])
-#     visited = set()  # Lưu các trạng thái đã khám phá
-#     solution_tree = defaultdict(list)  # Lưu cây giải pháp: {state: [(action, next_state)]}
-
-#     def get_neighbors(state):
-#         """Trả về các ô lân cận hợp lệ (không phải 'T')."""
-#         r, c = state
-#         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Phải, xuống, trái, lên
-#         neighbors = []
-#         for dr, dc in directions:
-#             nr, nc = r + dr, c + dc
-#             if 0 <= nr < rows and 0 <= nc < cols and tilemap[nr][nc] != "T":
-#                 neighbors.append((nr, nc))
-#         return neighbors
-
-#     def is_deterministic(state):
-#         """Kiểm tra xem trạng thái có phải là deterministic (không phải ô 'W')."""
-#         return tilemap[state[0]][state[1]] != "W"
-
-#     def get_possible_outcomes(state, action):
-#         """
-#         Trả về các kết quả có thể khi thực hiện hành động từ trạng thái.
-#         - Nếu ô đích không phải 'W', chỉ có 1 kết quả (di chuyển thành công).
-#         - Nếu ô đích là 'W', có 2 kết quả: di chuyển thành công hoặc thất bại (giữ nguyên).
-#         """
-#         r, c = state
-#         dr, dc = action
-#         next_state = (r + dr, c + dc)
-#         if is_deterministic(next_state):
-#             return [next_state]  # Kết quả duy nhất
-#         else:
-#             return [next_state, state]  # Thành công hoặc thất bại (giữ nguyên)
-
-#     def or_search(state):
-#         """Tìm kiếm tại OR node: chọn một hành động dẫn đến giải pháp."""
-#         if state == goal:
-#             return True
-#         if state in visited:
-#             return False
-#         visited.add(state)
-
-#         neighbors = get_neighbors(state)
-#         for next_state in neighbors:
-#             # Xác định hành động (vector di chuyển)
-#             action = (next_state[0] - state[0], next_state[1] - state[1])
-#             if and_search(state, action):
-#                 solution_tree[state].append((action, next_state))
-#                 return True
-
-#         visited.remove(state)
-#         return False
-
-#     def and_search(state, action):
-#         """Tìm kiếm tại AND node: tất cả kết quả của hành động phải dẫn đến giải pháp."""
-#         outcomes = get_possible_outcomes(state, action)
-#         for outcome in outcomes:
-#             if outcome in visited:
-#                 continue
-#             if not or_search(outcome):
-#                 return False
-#         return True
-
-#     # Kiểm tra đầu vào
-#     if not tilemap or not tilemap[0] or \
-#        not (0 <= start[0] < rows and 0 <= start[1] < cols) or \
-#        not (0 <= goal[0] < rows and 0 <= goal[1] < cols):
-#         return []
-
-#     # Chạy tìm kiếm
-#     if or_search(start):
-#         # Xây dựng đường đi từ solution_tree
-#         path = []
-#         curr = start
-#         path.append(curr)
-#         seen = set([curr])
-#         while curr != goal:
-#             found = False
-#             for action, next_state in solution_tree[curr]:
-#                 if next_state not in seen:
-#                     path.append(next_state)
-#                     seen.add(next_state)
-#                     curr = next_state
-#                     found = True
-#                     break
-#             if not found:
-#                 return []  # Không tìm thấy đường đi hợp lệ
-#         return path
-#     return []
-
 def and_or_search(start, goal, tilemap):
     # Kiểm tra đầu vào
     if not tilemap or not tilemap[0] or \
@@ -274,14 +184,17 @@ def backtracking(start, goal, tilemap, tile_cost):
     rows, cols = len(tilemap), len(tilemap[0])
     visited = set()
     path = []
+    exploration_order = []  # Lưu thứ tự các ô được thăm
 
     def backtrack(curr):
         if curr == goal:
             path.append(curr)
+            exploration_order.append(curr)
             return True
         if curr in visited:
             return False
         visited.add(curr)
+        exploration_order.append(curr)  # Ghi lại ô hiện tại
         path.append(curr)
         for neighbor in get_neighbors(curr, rows, cols, tilemap):
             if backtrack(neighbor):
@@ -291,8 +204,8 @@ def backtracking(start, goal, tilemap, tile_cost):
         return False
 
     if backtrack(start):
-        return path
-    return []
+        return path, exploration_order
+    return [], exploration_order
 
 def q_learning(start, goal, tilemap, episodes=1000, alpha=0.1, gamma=0.9, epsilon=0.1):
     rows, cols = len(tilemap), len(tilemap[0])

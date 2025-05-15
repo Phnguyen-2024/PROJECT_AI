@@ -29,7 +29,7 @@ def load_gif_frames(gif_path, screen):
         print(f"Không thể load ảnh nền động: {e}")
     return frames
 
-gif_path = r"D:\PROJECT_AI\src\hinhnen.gif"
+gif_path = r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\src\hinhnen.gif"
 gif_frames = None
 frame_count = 0
 current_frame = 0
@@ -76,8 +76,8 @@ def show_start_screen(screen):
     last_sound_click = 0
     SOUND_CLICK_DELAY = 200
 
-    music_path = r"D:\PROJECT_AI\src\nhacnen.mp3"
-    music_icon_path = r"D:\PROJECT_AI\src\music_icon.png"
+    music_path = r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\src\nhacnen.mp3"
+    music_icon_path = r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\src\music_icon.png"
 
     if not os.path.exists(music_path):
         error_messages.append(f"Music file not found: {music_path}")
