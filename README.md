@@ -26,6 +26,9 @@ PROJECT_AI/
 ### Màn hình chơi game
 ![Gameplay](picture/gameplay.png)
 
+### Màn hình thống kê
+![Thống kế](picture/thongke.png)
+
 ## Demo gameplay
 ### BFS Pathfinding
 ![Breadth - First Search](picture/bfs.gif)
