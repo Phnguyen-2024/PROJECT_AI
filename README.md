@@ -7,15 +7,15 @@
 ```
 PROJECT_AI/
 ├── src/
-│   ├── main.py           # Entry point
-│   ├── game_combined.py  # Game logic
-│   ├── thuattoan.py      # AI algorithms
-│   ├── player.py         # Player class
-│   ├── map_generator.py  # Map generation
-│   └── ui.py            # UI components
+│   ├── main.py           # Menu chính
+│   ├── game_combined.py  # Logic game
+│   ├── thuattoan.py      # Thuật toán AI
+│   ├── player.py         # Tạo nhân vật
+│   ├── map_generator.py  # Tạo map
+│   └── ui.py             # Thành phần giao diện
 ├── assets/
-│   ├── map/             # Game tiles
-│   └── sounds/          # Sound effects
+│   ├── map/              # Hình ảnh
+│   └── sounds/           # Hiệu ứng âm thanh
 └── README.md
 ```
 
