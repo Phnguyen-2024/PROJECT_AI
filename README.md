@@ -66,7 +66,7 @@ PROJECT_AI/
 ### Màn hình thống kê
 ![Thống kế](picture/thongke.png)
 
-## Demo gameplay
+## Tìm kho báu với thuật toán
 ### BFS Pathfinding
 ![Breadth - First Search](picture/bfs.gif)
 
@@ -87,8 +87,6 @@ PROJECT_AI/
 
 
 ## So sánh thuật toán
-
-
 
 ### Bảng so sánh
 ![Bảng so sánh](picture/compare.gif)
