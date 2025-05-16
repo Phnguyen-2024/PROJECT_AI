@@ -88,6 +88,8 @@ PROJECT_AI/
 
 ## So sánh thuật toán
 
+
+
 ### Bảng so sánh
 ![Bảng so sánh](picture/compare.gif)
 
@@ -120,6 +122,7 @@ Nếu bản đồ lớn hoặc nhiều nhánh, A* dùng nhiều bộ nhớ.
 
 Phụ thuộc vào hàm heuristic.
 
+
 2. **BFS**
    
 Mục đích: Tìm đường đi ngắn nhất trong bản đồ không có trọng số.
@@ -144,6 +147,7 @@ Không tối ưu nếu bản đồ có trọng số (vì không xét được lo
 
 Rất chậm nếu bản đồ rộng, vì duyệt toàn bộ không ưu tiên hướng đi tốt.
 
+
 3. **Beam Search**
    
 Mục đích: Tìm đường đi tốt bằng cách giới hạn số nhánh mở rộng ở mỗi bước.
@@ -165,6 +169,7 @@ Có khả năng tìm được đường hợp lý khi không cần tối ưu tuy
 Không đảm bảo tìm ra đích nếu bị giới hạn quá hẹp.
 
 Có thể bỏ lỡ đường đi đúng do không mở rộng đủ.
+
 
 4. **AND-OR Search**
    
@@ -194,6 +199,7 @@ Không hiệu quả nếu bản đồ không có bất định.
 
 Có thể không tạo được kế hoạch nếu xác suất thấp hoặc đường đi rủi ro cao.
 
+
 5. **Backtracking**
    
 Mục đích: Tìm 1 đường đi bất kỳ từ start đến goal bằng cách thử-sai và quay lui.
@@ -217,6 +223,7 @@ Dễ bị lặp vô hạn nếu không đánh dấu visited.
 Không tìm đường tối ưu.
 
 Rất tốn thời gian trong bản đồ lớn.
+
 
 7. **Q-Learning**
    
