@@ -1,10 +1,13 @@
 # Treasure Haunting Game Project
 
 ## Mô tả
+
 Truy Tìm Kho Báu là một trò chơi phiêu lưu hấp dẫn, nơi bạn sẽ hóa thân thành Blocky – một nhà thám hiểm dũng cảm, tìm kiếm kho báu ẩn giấu trên một hòn đảo bí mật. Với bản đồ được tạo ngẫu nhiên và các thuật toán AI thông minh, trò chơi mang đến trải nghiệm vừa thử thách vừa thú vị, kết hợp giữa khám phá chiến lược và học hỏi công nghệ.
 
 Tính năng nổi bật
+
 Bản đồ hòn đảo bí ẩn:
+
 Mỗi lần chơi, một bản đồ mới được tạo ngẫu nhiên với các loại địa hình đa dạng: cỏ xanh (G), đất khô (D), vùng nước (W) và cây cối (T) là chướng ngại vật không thể vượt qua.
 Kho báu (X) nằm ở góc dưới cùng bên phải của bản đồ, chờ bạn khám phá.
 Bản đồ được thiết kế đảm bảo luôn có đường đi từ điểm xuất phát (0, 0) đến kho báu, tạo nên sự cân bằng giữa thử thách và khả năng hoàn thành.
@@ -13,15 +16,21 @@ Chế độ thủ công: Sử dụng phím mũi tên hoặc WASD để tự đi�
 Chế độ tự động: Nhấn phím Space để kích hoạt thuật toán AI, quan sát Blocky tự động di chuyển đến kho báu.
 
 Hệ thống cấp độ đầy thử thách:
+
 Trò chơi có 3 cấp độ với thời gian giới hạn giảm dần:
+
 Level 1: 60 giây
+
 Level 2: 40 giây
+
 Level 3: 20 giây
+
 Hoàn thành một cấp độ để tiến lên cấp độ tiếp theo. Nếu hết thời gian, bạn sẽ phải bắt đầu lại từ Level 1.
 
 Trò chơi tích hợp các thuật toán tìm đường thông minh như: A*, BFS, Beam Search, And-Or Search, Backtracking, Q-Learning.
 
 Đối tượng người chơi:
+
 Phù hợp với mọi lứa tuổi, đặc biệt là những người yêu thích phiêu lưu, giải đố và khám phá công nghệ.
 Dành cho học sinh, sinh viên hoặc bất kỳ ai muốn tìm hiểu về thuật toán AI một cách trực quan và thú vị.
 
@@ -77,14 +86,20 @@ PROJECT_AI/
 ![Bảng so sánh](picture/compare.gif)
 
 ### Phân tích
-1. **A*** 
+1. **A***
+   
 Mục đích: Tìm đường đi ngắn nhất từ vị trí bắt đầu đến kho báu, có xét chi phí đi lại và hướng dẫn bằng hàm heuristic.
 
 Cách hoạt động:
+
 Sử dụng hàng đợi ưu tiên (heapq) với trọng số:
+
 f(n)=g(n)+h(n)
+
 g(n): chi phí thực đến đỉnh n.
+
 h(n): ước lượng chi phí còn lại từ n đến đích (heuristic Manhattan).
+
 Mỗi bước chọn node có giá trị f nhỏ nhất để mở rộng.
 
 ✅ Ưu điểm:
@@ -96,6 +111,7 @@ Nếu bản đồ lớn hoặc nhiều nhánh, A* dùng nhiều bộ nhớ.
 Phụ thuộc vào hàm heuristic.
 
 2. **BFS**
+   
 Mục đích: Tìm đường đi ngắn nhất trong bản đồ không có trọng số.
 
 Cách hoạt động:
@@ -112,6 +128,7 @@ Không tối ưu nếu bản đồ có trọng số (vì không xét được lo
 Rất chậm nếu bản đồ rộng, vì duyệt toàn bộ không ưu tiên hướng đi tốt.
 
 3. **Beam Search**
+   
 Mục đích: Tìm đường đi tốt bằng cách giới hạn số nhánh mở rộng ở mỗi bước.
 
 Cách hoạt động:
@@ -127,12 +144,17 @@ Không đảm bảo tìm ra đích nếu bị giới hạn quá hẹp.
 Có thể bỏ lỡ đường đi đúng do không mở rộng đủ.
 
 4. **AND-OR Search**
+   
 Mục đích: Áp dụng trong môi trường không chắc chắn (như ô W có thể trơn trượt).
 
 Cách hoạt động:
+
 Gồm 2 dạng:
+
 OR-node: chọn 1 hành động trong nhiều lựa chọn.
+
 AND-node: tất cả nhánh con đều phải thành công.
+
 Xây dựng cây kế hoạch (plan tree) dựa trên xác suất thành công/thất bại khi di chuyển.
 
 ✅ Ưu điểm:
@@ -145,6 +167,7 @@ Không hiệu quả nếu bản đồ không có bất định.
 Có thể không tạo được kế hoạch nếu xác suất thấp hoặc đường đi rủi ro cao.
 
 5. **Backtracking**
+   
 Mục đích: Tìm 1 đường đi bất kỳ từ start đến goal bằng cách thử-sai và quay lui.
 
 Cách hoạt động:
@@ -161,6 +184,7 @@ Không tìm đường tối ưu.
 Rất tốn thời gian trong bản đồ lớn.
 
 7. **Q-Learning**
+   
 Mục đích: Cho nhân vật tự học cách đi đến kho báu sau nhiều lần thử.
 
 Cách hoạt động:
