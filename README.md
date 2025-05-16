@@ -90,6 +90,7 @@ Mỗi bước chọn node có giá trị f nhỏ nhất để mở rộng.
 ✅ Ưu điểm:
 Tìm được đường đi ngắn nhất nếu h không vượt quá chi phí thật (admissible).
 Có thể điều chỉnh tile_cost theo loại địa hình (G: cỏ, D: đất, W: nước...).
+
 ❌ Nhược điểm:
 Nếu bản đồ lớn hoặc nhiều nhánh, A* dùng nhiều bộ nhớ.
 Phụ thuộc vào hàm heuristic.
@@ -105,6 +106,7 @@ Lưu cha (parent) để dựng lại đường đi.
 ✅ Ưu điểm:
 Luôn tìm ra đường đi ngắn nhất nếu chi phí giữa các ô bằng nhau.
 Dễ triển khai và kiểm chứng đúng sai.
+
 ❌ Nhược điểm:
 Không tối ưu nếu bản đồ có trọng số (vì không xét được loại đất).
 Rất chậm nếu bản đồ rộng, vì duyệt toàn bộ không ưu tiên hướng đi tốt.
@@ -119,6 +121,7 @@ beam_width = 3 mặc định.
 ✅ Ưu điểm:
 Nhanh hơn A*, giảm lượng bộ nhớ.
 Có khả năng tìm được đường hợp lý khi không cần tối ưu tuyệt đối.
+
 ❌ Nhược điểm:
 Không đảm bảo tìm ra đích nếu bị giới hạn quá hẹp.
 Có thể bỏ lỡ đường đi đúng do không mở rộng đủ.
@@ -135,6 +138,7 @@ Xây dựng cây kế hoạch (plan tree) dựa trên xác suất thành công/t
 ✅ Ưu điểm:
 Phù hợp với môi trường bất định (ví dụ: có thể trượt nếu đi qua W).
 Cho ra kế hoạch nhiều nhánh, không chỉ là 1 đường đi duy nhất.
+
 ❌ Nhược điểm:
 Rất khó triển khai, dễ sai.
 Không hiệu quả nếu bản đồ không có bất định.
@@ -150,6 +154,7 @@ Nếu đi sai thì quay lui về bước trước và thử hướng khác.
 ✅ Ưu điểm:
 Cực kỳ đơn giản, dễ hiểu, dễ cài đặt.
 Không cần biết trước thông tin heuristic hay chi phí.
+
 ❌ Nhược điểm:
 Dễ bị lặp vô hạn nếu không đánh dấu visited.
 Không tìm đường tối ưu.
@@ -165,6 +170,7 @@ Mỗi trạng thái (vị trí) và hành động có một giá trị Q(s,a).
 ✅ Ưu điểm:
 Không cần biết bản đồ trước.
 Có thể áp dụng được trong môi trường động hoặc thay đổi.
+
 ❌ Nhược điểm:
 Cần huấn luyện nhiều lần (default episodes=1000).
 Có thể bị "kẹt" nếu không khám phá tốt (epsilon quá thấp).
