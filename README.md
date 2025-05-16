@@ -227,23 +227,36 @@ Rất tốn thời gian trong bản đồ lớn.
 
 7. **Q-Learning**
    
-Mục đích: Cho nhân vật tự học cách đi đến kho báu sau nhiều lần thử.
+Mục đích: Cho nhân học cách đi đến kho báu sau nhiều lần thử.
 
 Cách hoạt động:
 
-Mỗi trạng thái (vị trí) và hành động có một giá trị Q(s,a).
-
+Mỗi vị trí và hành động có một giá trị Q(state, action).
+Tham số cho biểu thức:
+   -	alpha - tỷ lệ học: 0.1
+   -	gamma – tỷ lệ quan tâm về phần thưởng: 0.9
+   -	epsilon - tỷ lệ khám phá: 0.1
+Phần thưởng
+   -	Nếu tìm thấy kho báu: +100
+   -	Nếu gặp vật cản: -10
+   -	Mặc định di chuyển: -1
+Chiến lược
+   -	Khám phá
+   -	Khai phá
+Các bước đi sẽ dựa trên:
+   -	Tỷ lệ khám phá
+   -	Giá trị Q-value
+   -	Phần thưởng
 
 ✅ Ưu điểm:
-Không cần biết bản đồ trước.
-
-Có thể áp dụng được trong môi trường động hoặc thay đổi.
+Không cần biết bản đồ trước, chiến lược khám phá để tự học cách đi tốt nhất
+Kết hợp chiến lược khai phá và khám phá tránh bị kẹt, tránh bỏ lỡ những hướng đi tốt và tối ưu
 
 ❌ Nhược điểm:
 
-Cần huấn luyện nhiều lần (default episodes=1000).
-
-Có thể bị "kẹt" nếu không khám phá tốt (epsilon quá thấp).
+Cần huấn luyện rất nhiều lần đối với bản đồ lớn và nhiều chướng ngại vật
+Vì có thể cần học rất nhiều nên sẽ duyệt rất nhiều node gây tốn thời gian và tài nguyên
+Vẫn có thể không tìm thấy đường đi nếu khám phá không tốt
 
 ## Công nghệ sử dụng
 - Python
