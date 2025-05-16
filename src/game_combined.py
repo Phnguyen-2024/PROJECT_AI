@@ -19,27 +19,27 @@ class Game:
         self.cols = cols
     
         # Load GIF frames
-        self.gif_path = r"D:\PROJECT_AI\src\hinhnen.gif"
+        self.gif_path = r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\src\hinhnen.gif"
         self.gif_frames = load_gif_frames(self.gif_path, screen)
         self.frame_count = len(self.gif_frames)
         self.current_frame = 0
         self.frame_timer = 0
 
         # Load images
-        self.grass_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\grass.png", tile_size)
-        self.dirt_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\dirt.png", tile_size)
-        self.trees_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\tree.png", tile_size)
-        self.water_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\water_16px.png", tile_size)
-        self.treasure_img = load_image(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\treasure.png", tile_size)
+        self.grass_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\grass.png", tile_size)
+        self.dirt_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\dirt.png", tile_size)
+        self.trees_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\tree.png", tile_size)
+        self.water_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\water_16px.png", tile_size)
+        self.treasure_img = load_image(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\treasure.png", tile_size)
 
         # Load icons for buttons
-        self.replay_icon = load_icon(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\replay_icon.png", 24)
-        self.pause_icon = load_icon(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\pause_icon.png", 24)
+        self.replay_icon = load_icon(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\replay_icon.png", 24)
+        self.pause_icon = load_icon(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\pause_icon.png", 24)
 
         # Load win and lose sounds
         try:
-            self.win_sound = pygame.mixer.Sound(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\win.mp3")
-            self.lose_sound = pygame.mixer.Sound(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\losing.mp3")
+            self.win_sound = pygame.mixer.Sound(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\win.mp3")
+            self.lose_sound = pygame.mixer.Sound(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\losing.mp3")
         except pygame.error as e:
             print(f"Cannot load sound: {e}")
             self.win_sound = None
@@ -52,7 +52,7 @@ class Game:
         self.tilemap[self.goal_pos[0]][self.goal_pos[1]] = "X"
 
         # Initialize player
-        blocky_sprite = pygame.image.load(r"D:\tailieumonhoc\trituenhantao\game - Copy - Copy\assets\map\blocky.png")
+        blocky_sprite = pygame.image.load(r"D:\Nam2 - Ki2\Artificial Intelligence\PROJECT_AI\assets\map\blocky.png")
         self.player = Player(screen, blocky_sprite, start_pos=self.start_pos, tile_size=tile_size)
 
         # Game state
@@ -564,7 +564,7 @@ class Game:
             if state == goal:
                 return 100
             if tilemap[state[0]][state[1]] == "T":
-                return -100
+                return -10
             return -1
 
         for _ in range(episodes):
